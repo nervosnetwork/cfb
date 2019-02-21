@@ -1,0 +1,94 @@
+namespace example;
+
+attribute "since_version";
+attribute "deprecated_version";
+attribute "nested_flatbuffer";
+attribute "fixed_array";
+
+enum Language :short { Rust, Python }
+
+struct U256 (force_align: 8, fixed_array: "[ubyte:32]") {
+    byte_0: ubyte;
+    byte_1: ubyte;
+    byte_2: ubyte;
+    byte_3: ubyte;
+    byte_4: ubyte;
+    byte_5: ubyte;
+    byte_6: ubyte;
+    byte_7: ubyte;
+    byte_8: ubyte;
+    byte_9: ubyte;
+
+    byte_10: ubyte;
+    byte_11: ubyte;
+    byte_12: ubyte;
+    byte_13: ubyte;
+    byte_14: ubyte;
+    byte_15: ubyte;
+    byte_16: ubyte;
+    byte_17: ubyte;
+    byte_18: ubyte;
+    byte_19: ubyte;
+
+    byte_20: ubyte;
+    byte_21: ubyte;
+    byte_22: ubyte;
+    byte_23: ubyte;
+    byte_24: ubyte;
+    byte_25: ubyte;
+    byte_26: ubyte;
+    byte_27: ubyte;
+    byte_28: ubyte;
+    byte_29: ubyte;
+
+    byte_30: ubyte;
+    byte_31: ubyte;
+}
+
+struct Scalars {
+    a_byte: byte;
+    a_ubyte: ubyte;
+    a_bool: bool;
+    a_short: short;
+    a_ushort: ushort;
+    a_int: int;
+    a_uint: uint;
+    a_float: float;
+    a_long: long;
+    a_ulong: ulong;
+    a_double: double;
+}
+
+table ChildExample {
+    buffer: [ubyte] (nested_flatbuffer: "Example");
+}
+
+table Example {
+    version: uint32;
+    hash: U256;
+    language: Language;
+    scalars: Scalars;
+    info: string (deprecated, deprecated_version: 2);
+    blocks: [Block];
+    children: [ChildExample];
+    lines: uint32 (since_version: 2);
+}
+
+table Code {
+    bytes: [ubyte];
+}
+union CodeOption {
+    Code
+}
+
+table Author {
+    name: string;
+    birth: uint32;
+}
+
+table Block {
+    author: Author;
+    code: CodeOption;
+}
+
+root_type Example;
