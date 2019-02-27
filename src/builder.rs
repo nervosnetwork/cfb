@@ -124,6 +124,32 @@ impl<T: AsRef<str>> Component for StringComponent<T> {
     }
 }
 
+pub struct RawVectorComponent<T> {
+    elements: T,
+    len: usize,
+}
+
+impl<T: AsRef<[u8]>> RawVectorComponent<T> {
+    pub fn new(elements: T, len: usize) -> Self {
+        RawVectorComponent { elements, len }
+    }
+}
+
+impl<T: AsRef<[u8]>> Component for RawVectorComponent<T> {
+    fn build(&self, builder: &mut Builder) -> usize {
+        let bytes = self.elements.as_ref();
+
+        let alignment = bytes.len() / self.len;
+        builder.align_end(SIZE_OF_LEN, alignment);
+        let position = builder.tell();
+
+        builder.put_len(self.len as Len);
+        builder.extend_from_slice(bytes);
+
+        position
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -194,6 +220,28 @@ mod tests {
             &((s.len() as u32).to_le_bytes()),
             s.as_bytes(),
             &[0u8],
+        ]
+        .concat();
+        assert_eq!(expect, buf);
+    }
+
+    #[test]
+    fn test_raw_vector_component() {
+        let raw: Vec<u8> = vec![1u32, 9]
+            .into_iter()
+            .map(|n| n.to_le_bytes().to_vec())
+            .flatten()
+            .collect();
+        let builder = Builder::new(RawVectorComponent::new(raw.clone(), 2));
+        let buf = builder.build();
+
+        let expect = [
+            // root uoffset
+            &4u32.to_le_bytes(),
+            // len
+            &2u32.to_le_bytes(),
+            // content
+            &raw[..],
         ]
         .concat();
         assert_eq!(expect, buf);
