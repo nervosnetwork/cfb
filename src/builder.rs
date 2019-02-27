@@ -1,5 +1,5 @@
-use crate::types::UOffset;
-use crate::types::SIZE_OF_UOFFSET;
+use crate::alignment::{align, align_end};
+use crate::types::{Len, UOffset, SIZE_OF_LEN, SIZE_OF_UOFFSET};
 
 pub trait Component {
     /// Build the component and return the start position of the component in the buffer.
@@ -10,11 +10,6 @@ struct DesignatedComponent<'a> {
     /// Where to store the UOffset in the buffer.
     offset_position: usize,
     component: Box<dyn Component + 'a>,
-}
-
-pub struct Builder<'a> {
-    buffer: Vec<u8>,
-    components: Vec<DesignatedComponent<'a>>,
 }
 
 impl<T> Component for T
@@ -38,8 +33,13 @@ impl<'a> DesignatedComponent<'a> {
         let position = self.component.build(builder);
         let uoffset = (position - self.offset_position) as UOffset;
 
-        builder.write_uoffset(self.offset_position, uoffset);
+        builder.put_uoffset_at(uoffset, self.offset_position);
     }
+}
+
+pub struct Builder<'a> {
+    buffer: Vec<u8>,
+    components: Vec<DesignatedComponent<'a>>,
 }
 
 impl<'a> Builder<'a> {
@@ -68,17 +68,59 @@ impl<'a> Builder<'a> {
         self.buffer
     }
 
-    pub fn len(&self) -> usize {
+    pub fn tell(&self) -> usize {
         self.buffer.len()
     }
 
-    pub fn extend_from_slice(&mut self, data: &[u8]) {
-        self.buffer.extend_from_slice(data);
+    pub fn extend_from_slice(&mut self, bytes: &[u8]) {
+        self.buffer.extend_from_slice(bytes);
     }
 
-    fn write_uoffset(&mut self, position: usize, uoffset: UOffset) {
+    pub fn push(&mut self, byte: u8) {
+        self.buffer.push(byte);
+    }
+
+    /// Append paddings to ensure the next appended data is aligned.
+    pub fn align(&mut self, alignment: usize) {
+        self.buffer.resize(align(self.tell(), alignment), 0)
+    }
+
+    /// Append paddings to ensure that, after data of lenth `len` has been appended, the next appended data is aligned.
+    pub fn align_end(&mut self, len: usize, alignment: usize) {
+        self.buffer
+            .resize(align_end(self.tell(), len, alignment), 0)
+    }
+
+    fn put_uoffset_at(&mut self, uoffset: UOffset, position: usize) {
         let target = &mut self.buffer[position..position + SIZE_OF_UOFFSET];
-        target.copy_from_slice(&uoffset.to_le_bytes()[..]);
+        target.copy_from_slice(&uoffset.to_le_bytes());
+    }
+
+    fn put_len(&mut self, n: Len) {
+        self.buffer.extend_from_slice(&n.to_le_bytes());
+    }
+}
+
+pub struct StringComponent<T>(T);
+
+impl<T: AsRef<str>> StringComponent<T> {
+    pub fn new(s: T) -> Self {
+        StringComponent(s)
+    }
+}
+
+impl<T: AsRef<str>> Component for StringComponent<T> {
+    fn build(&self, builder: &mut Builder) -> usize {
+        let s = self.0.as_ref();
+
+        builder.align(SIZE_OF_LEN);
+        let position = builder.tell();
+
+        builder.put_len(s.len() as Len);
+        builder.extend_from_slice(s.as_bytes());
+        builder.push(0);
+
+        position
     }
 }
 
@@ -88,9 +130,73 @@ mod tests {
 
     #[test]
     fn test_empty_component() {
-        let builder = Builder::new(|builder: &mut Builder| builder.len());
+        let builder = Builder::new(|builder: &mut Builder| builder.tell());
         let buf = builder.build();
 
-        assert_eq!(vec![4u8, 0, 0, 0], buf);
+        let expect = [
+            // root uoffset
+            4u32.to_le_bytes(),
+        ]
+        .concat();
+        assert_eq!(expect, buf);
     }
+
+    #[test]
+    fn test_owned_string_component() {
+        let s = String::from("String");
+        let builder = Builder::new(StringComponent::new(s.clone()));
+        let buf = builder.build();
+
+        let expect = [
+            // root uoffset
+            &4u32.to_le_bytes(),
+            // len
+            &((s.len() as u32).to_le_bytes()),
+            // content
+            s.as_bytes(),
+            // null-terminated
+            &[0u8],
+        ]
+        .concat();
+        assert_eq!(expect, buf);
+    }
+
+    #[test]
+    fn test_borrowed_string_component() {
+        let s = "str".to_string();
+        let builder = Builder::new(StringComponent::new(s.as_str()));
+        let buf = builder.build();
+
+        let expect = [
+            // root uoffset
+            &4u32.to_le_bytes(),
+            // len
+            &((s.len() as u32).to_le_bytes()),
+            // content
+            s.as_bytes(),
+            // terminal null
+            &[0u8],
+        ]
+        .concat();
+        assert_eq!(expect, buf);
+    }
+
+    #[test]
+    fn test_string_component_alignment() {
+        let s = String::from("s");
+        let mut builder = Builder::new(StringComponent::new(s.clone()));
+        builder.push(0);
+        let buf = builder.build();
+
+        let expect = [
+            &8u32.to_le_bytes(),
+            &[0u8, 0, 0, 0], // padding
+            &((s.len() as u32).to_le_bytes()),
+            s.as_bytes(),
+            &[0u8],
+        ]
+        .concat();
+        assert_eq!(expect, buf);
+    }
+
 }
