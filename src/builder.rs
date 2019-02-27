@@ -1,5 +1,5 @@
-use types::UOffset;
-use types::SIZE_OF_UOFFSET;
+use crate::types::UOffset;
+use crate::types::SIZE_OF_UOFFSET;
 
 pub trait Component {
     /// Build the component and return the start position of the component in the buffer.

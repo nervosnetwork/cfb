@@ -6,8 +6,10 @@ repository = "https://github.com/nervosnetwork/cfb"
 categories = ["data-structures", "encoding", "memory-management"]
 license = "MIT"
 description = "CFB (Canonical FlatBuffers) is a restricted variant of FlatBuffers for producing unequivocal transfer syntax."
+edition = "2018"
 
 [dependencies]
 
 [dev-dependencies]
 flatbuffers = "0.5.0"
+proptest = "0.9.1"
