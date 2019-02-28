@@ -1,35 +1,38 @@
 use crate::alignment::{align, align_end};
 use crate::types::{Len, UOffset, SIZE_OF_LEN, SIZE_OF_UOFFSET};
 
-pub trait Component {
+pub trait Component<'a> {
     /// Build the component and return the start position of the component in the buffer.
-    fn build(&self, builder: &mut Builder) -> usize;
+    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize;
 }
 
 struct DesignatedComponent<'a> {
     /// Where to store the UOffset in the buffer.
     offset_position: usize,
-    component: Box<dyn Component + 'a>,
+    component: Box<dyn Component<'a> + 'a>,
 }
 
-impl<T> Component for T
+impl<'a, T> Component<'a> for T
 where
-    T: Fn(&mut Builder) -> usize,
+    T: FnOnce(&mut Builder<'a>) -> usize,
 {
-    fn build(&self, builder: &mut Builder) -> usize {
-        self(builder)
+    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
+        (self)(builder)
     }
 }
 
 impl<'a> DesignatedComponent<'a> {
-    fn new<T: Component + 'a>(offset_position: usize, component: T) -> DesignatedComponent<'a> {
+    fn new(
+        offset_position: usize,
+        component: Box<dyn Component<'a> + 'a>,
+    ) -> DesignatedComponent<'a> {
         DesignatedComponent {
             offset_position,
-            component: Box::new(component),
+            component: component,
         }
     }
 
-    fn build(self, builder: &mut Builder) {
+    fn build(self, builder: &mut Builder<'a>) {
         let position = self.component.build(builder);
         let uoffset = (position - self.offset_position) as UOffset;
 
@@ -43,20 +46,20 @@ pub struct Builder<'a> {
 }
 
 impl<'a> Builder<'a> {
-    pub fn new<T: Component + 'a>(root: T) -> Builder<'a> {
+    pub fn new<T: Component<'a> + 'a>(root: T) -> Builder<'a> {
         Builder {
             buffer: vec![0u8; SIZE_OF_UOFFSET],
-            components: vec![DesignatedComponent::new(0, root)],
+            components: vec![DesignatedComponent::new(0, Box::new(root))],
         }
     }
 
-    pub fn with_capacity<T: Component + 'a>(capacity: usize, root: T) -> Builder<'a> {
+    pub fn with_capacity<T: Component<'a> + 'a>(capacity: usize, root: T) -> Builder<'a> {
         let mut buffer = Vec::with_capacity(capacity);
         buffer.extend_from_slice(&[0u8; SIZE_OF_UOFFSET]);
 
         Builder {
             buffer,
-            components: vec![DesignatedComponent::new(0, root)],
+            components: vec![DesignatedComponent::new(0, Box::new(root))],
         }
     }
 
@@ -109,8 +112,8 @@ impl<T: AsRef<str>> StringComponent<T> {
     }
 }
 
-impl<T: AsRef<str>> Component for StringComponent<T> {
-    fn build(&self, builder: &mut Builder) -> usize {
+impl<'a, T: AsRef<str>> Component<'a> for StringComponent<T> {
+    fn build(self: Box<Self>, builder: &mut Builder) -> usize {
         let s = self.0.as_ref();
 
         builder.align(SIZE_OF_LEN);
@@ -135,8 +138,8 @@ impl<T: AsRef<[u8]>> RawVectorComponent<T> {
     }
 }
 
-impl<T: AsRef<[u8]>> Component for RawVectorComponent<T> {
-    fn build(&self, builder: &mut Builder) -> usize {
+impl<'a, T: AsRef<[u8]>> Component<'a> for RawVectorComponent<T> {
+    fn build(self: Box<Self>, builder: &mut Builder) -> usize {
         let bytes = self.elements.as_ref();
 
         let alignment = bytes.len() / self.len;
@@ -246,5 +249,4 @@ mod tests {
         .concat();
         assert_eq!(expect, buf);
     }
-
 }
