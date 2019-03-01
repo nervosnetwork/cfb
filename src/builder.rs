@@ -1,4 +1,4 @@
-use crate::alignment::{align, align_end};
+use crate::alignment::{align, align_after};
 use crate::types::{Len, UOffset, SIZE_OF_LEN, SIZE_OF_UOFFSET};
 
 pub trait Component<'a> {
@@ -89,9 +89,9 @@ impl<'a> Builder<'a> {
     }
 
     /// Append paddings to ensure that, after data of lenth `len` has been appended, the next appended data is aligned.
-    pub fn align_end(&mut self, len: usize, alignment: usize) {
+    pub fn align_after(&mut self, len: usize, alignment: usize) {
         self.buffer
-            .resize(align_end(self.tell(), len, alignment), 0)
+            .resize(align_after(self.tell(), len, alignment), 0)
     }
 
     fn put_uoffset_at(&mut self, uoffset: UOffset, position: usize) {
@@ -143,7 +143,7 @@ impl<'a, T: AsRef<[u8]>> Component<'a> for RawVectorComponent<T> {
         let bytes = self.elements.as_ref();
 
         let alignment = bytes.len() / self.len;
-        builder.align_end(SIZE_OF_LEN, alignment);
+        builder.align_after(SIZE_OF_LEN, alignment);
         let position = builder.tell();
 
         builder.put_len(self.len as Len);
