@@ -28,7 +28,7 @@ impl<'a> DesignatedComponent<'a> {
     ) -> DesignatedComponent<'a> {
         DesignatedComponent {
             offset_position,
-            component: component,
+            component,
         }
     }
 
