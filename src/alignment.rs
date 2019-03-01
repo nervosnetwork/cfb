@@ -32,16 +32,16 @@ pub fn align(current_position: usize, alignment: usize) -> usize {
 /// ## Examples
 ///
 /// ```
-/// use cfb::alignment::align_end;
+/// use cfb::alignment::align_after;
 /// # let current_position = 0;
 /// # let len = 8;
 /// # let alignment = 16;
-/// let result = align_end(current_position, len, alignment);
+/// let result = align_after(current_position, len, alignment);
 /// assert_eq!((result + len) % alignment, 0);
 /// assert!(result >= current_position);
 /// assert!(result - current_position < alignment);
 /// ```
-pub fn align_end(current_position: usize, len: usize, alignment: usize) -> usize {
+pub fn align_after(current_position: usize, len: usize, alignment: usize) -> usize {
     let real_alignment = alignment.max(len);
     let first_available_position = align(current_position, real_alignment);
 
@@ -67,11 +67,11 @@ mod tests {
     }
 
     #[test]
-    fn test_align_end() {
-        assert_eq!(0, align_end(0, 0, 32));
-        assert_eq!(24, align_end(0, 8, 32));
-        assert_eq!(24, align_end(24, 8, 32));
-        assert_eq!(56, align_end(25, 8, 32));
+    fn test_align_after() {
+        assert_eq!(0, align_after(0, 0, 32));
+        assert_eq!(24, align_after(0, 8, 32));
+        assert_eq!(24, align_after(24, 8, 32));
+        assert_eq!(56, align_after(25, 8, 32));
     }
 
     proptest! {
@@ -91,7 +91,7 @@ mod tests {
         }
 
         #[test]
-        fn align_end_proptest(
+        fn align_after_proptest(
             current_position: usize,
             len in (0u32..16).prop_map(|d| 2usize.pow(d)),
             alignment in (0u32..16).prop_map(|d| 2usize.pow(d)),
@@ -103,7 +103,7 @@ mod tests {
                     .is_some(),
                 "avoid integer overflow"
             );
-            let result = align_end(current_position, len, alignment);
+            let result = align_after(current_position, len, alignment);
             assert!(result >= current_position);
             assert!(result - current_position < alignment.max(len));
             assert_eq!(0, (result + len) % alignment.max(len));
