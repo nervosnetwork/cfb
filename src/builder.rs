@@ -1,4 +1,5 @@
 use crate::alignment::{align, align_after};
+use crate::scalar::Scalar;
 use crate::types::{Len, UOffset, SIZE_OF_LEN, SIZE_OF_UOFFSET};
 
 pub trait Component<'a> {
@@ -36,7 +37,7 @@ impl<'a> DesignatedComponent<'a> {
         let position = self.component.build(builder);
         let uoffset = (position - self.offset_position) as UOffset;
 
-        builder.put_uoffset_at(uoffset, self.offset_position);
+        builder.set_scalar(self.offset_position, uoffset);
     }
 }
 
@@ -79,8 +80,15 @@ impl<'a> Builder<'a> {
         self.buffer.extend_from_slice(bytes);
     }
 
-    pub fn push(&mut self, byte: u8) {
-        self.buffer.push(byte);
+    pub fn push_scalar<T: Scalar>(&mut self, s: T) {
+        self.buffer.extend_from_slice(s.as_bytes());
+    }
+
+    pub fn set_scalar<T: Scalar>(&mut self, position: usize, s: T) {
+        let src = s.as_bytes();
+        assert!(position + src.len() <= self.buffer.len());
+        let target = &mut self.buffer[position..position + src.len()];
+        target.copy_from_slice(src);
     }
 
     /// Append paddings to ensure the next appended data is aligned.
@@ -92,15 +100,6 @@ impl<'a> Builder<'a> {
     pub fn align_after(&mut self, len: usize, alignment: usize) {
         self.buffer
             .resize(align_after(self.tell(), len, alignment), 0)
-    }
-
-    fn put_uoffset_at(&mut self, uoffset: UOffset, position: usize) {
-        let target = &mut self.buffer[position..position + SIZE_OF_UOFFSET];
-        target.copy_from_slice(&uoffset.to_le_bytes());
-    }
-
-    fn put_len(&mut self, n: Len) {
-        self.buffer.extend_from_slice(&n.to_le_bytes());
     }
 }
 
@@ -119,9 +118,9 @@ impl<'a, T: AsRef<str>> Component<'a> for StringComponent<T> {
         builder.align(SIZE_OF_LEN);
         let position = builder.tell();
 
-        builder.put_len(s.len() as Len);
+        builder.push_scalar(s.len() as Len);
         builder.extend_from_slice(s.as_bytes());
-        builder.push(0);
+        builder.push_scalar(0u8);
 
         position
     }
@@ -146,7 +145,7 @@ impl<'a, T: AsRef<[u8]>> Component<'a> for RawVectorComponent<T> {
         builder.align_after(SIZE_OF_LEN, alignment);
         let position = builder.tell();
 
-        builder.put_len(self.len as Len);
+        builder.push_scalar(self.len as Len);
         builder.extend_from_slice(bytes);
 
         position
@@ -214,7 +213,7 @@ mod tests {
     fn test_string_component_alignment() {
         let s = String::from("s");
         let mut builder = Builder::new(StringComponent::new(s.clone()));
-        builder.push(0);
+        builder.push_scalar(0);
         let buf = builder.build();
 
         let expect = [
