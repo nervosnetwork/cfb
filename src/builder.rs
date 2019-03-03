@@ -126,20 +126,20 @@ impl<'a, T: AsRef<str>> Component<'a> for StringComponent<T> {
     }
 }
 
-pub struct RawVectorComponent<T> {
-    elements: T,
+pub struct ScalarsVectorComponent<T> {
+    scalars: T,
     len: usize,
 }
 
-impl<T: AsRef<[u8]>> RawVectorComponent<T> {
-    pub fn new(elements: T, len: usize) -> Self {
-        RawVectorComponent { elements, len }
+impl<T: AsRef<[u8]>> ScalarsVectorComponent<T> {
+    pub fn new(scalars: T, len: usize) -> Self {
+        ScalarsVectorComponent { scalars, len }
     }
 }
 
-impl<'a, T: AsRef<[u8]>> Component<'a> for RawVectorComponent<T> {
+impl<'a, T: AsRef<[u8]>> Component<'a> for ScalarsVectorComponent<T> {
     fn build(self: Box<Self>, builder: &mut Builder) -> usize {
-        let bytes = self.elements.as_ref();
+        let bytes = self.scalars.as_ref();
 
         let alignment = bytes.len() / self.len;
         builder.align_after(SIZE_OF_LEN, alignment);
@@ -228,13 +228,13 @@ mod tests {
     }
 
     #[test]
-    fn test_raw_vector_component() {
-        let raw: Vec<u8> = vec![1u32, 9]
+    fn test_scalars_vector_component() {
+        let scalars: Vec<u8> = vec![1u32, 9]
             .into_iter()
             .map(|n| n.to_le_bytes().to_vec())
             .flatten()
             .collect();
-        let builder = Builder::new(RawVectorComponent::new(raw.clone(), 2));
+        let builder = Builder::new(ScalarsVectorComponent::new(scalars.clone(), 2));
         let buf = builder.build();
 
         let expect = [
@@ -243,7 +243,7 @@ mod tests {
             // len
             &2u32.to_le_bytes(),
             // content
-            &raw[..],
+            &scalars[..],
         ]
         .concat();
         assert_eq!(expect, buf);
