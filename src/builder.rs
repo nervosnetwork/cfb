@@ -1,6 +1,7 @@
 use crate::alignment::{align, align_after};
 use crate::scalar::Scalar;
 use crate::types::{Len, UOffset, SIZE_OF_LEN, SIZE_OF_UOFFSET};
+use std::collections::HashMap;
 
 pub trait Component<'a> {
     /// Build the component and return the start position of the component in the buffer.
@@ -46,6 +47,7 @@ impl<'a> DesignatedComponent<'a> {
 pub struct Builder<'a> {
     buffer: Vec<u8>,
     components: Vec<DesignatedComponent<'a>>,
+    vtables: HashMap<Vec<u8>, usize>,
 }
 
 impl<'a> Builder<'a> {
@@ -53,6 +55,7 @@ impl<'a> Builder<'a> {
         Builder {
             buffer: vec![0u8; SIZE_OF_UOFFSET],
             components: vec![DesignatedComponent::new(0, Box::new(root))],
+            vtables: Default::default(),
         }
     }
 
@@ -63,6 +66,7 @@ impl<'a> Builder<'a> {
         Builder {
             buffer,
             components: vec![DesignatedComponent::new(0, Box::new(root))],
+            vtables: Default::default(),
         }
     }
 
@@ -78,12 +82,9 @@ impl<'a> Builder<'a> {
         self.buffer.len()
     }
 
-    pub fn push_component<C: Component<'a> + 'a>(&mut self, offset_position: usize, component: C) {
-        assert!(offset_position + 4 <= self.tell());
-        self.components.push(DesignatedComponent::new(
-            offset_position,
-            Box::new(component),
-        ))
+    pub fn push_component(&mut self, component: DesignatedComponent<'a>) {
+        assert!(component.offset_position + 4 <= self.tell());
+        self.components.push(component);
     }
 
     pub fn extend_from_slice(&mut self, bytes: &[u8]) -> &mut Self {
@@ -116,6 +117,24 @@ impl<'a> Builder<'a> {
     pub fn align_after(&mut self, len: usize, alignment: usize) {
         self.buffer
             .resize(align_after(self.tell(), len, alignment), 0)
+    }
+
+    /// Vtable is at the top of the buffer with `nbytes` bytes. Return the position of the vtable
+    /// in the buffer after deduplication.
+    pub fn deduplicate_vtable(&mut self, vtable_nbytes: usize) -> usize {
+        let vtable_end = self.tell();
+        let vtable_begin = vtable_end - vtable_nbytes;
+        let vtable_slice = &self.buffer[vtable_begin..vtable_end];
+
+        if let Some(&offset) = self.vtables.get(vtable_slice) {
+            // Table alignment must be larger than vtable, so it is OK to leave the paddings in the
+            // buffer.
+            self.buffer.truncate(vtable_begin);
+            offset
+        } else {
+            self.vtables.insert(vtable_slice.to_owned(), vtable_begin);
+            vtable_begin
+        }
     }
 }
 
@@ -197,7 +216,10 @@ where
         builder.push_scalar(len as Len);
         builder.pad(len * SIZE_OF_UOFFSET);
         for c in iter.rev() {
-            builder.push_component(current_offset_position, c);
+            builder.push_component(DesignatedComponent::new(
+                current_offset_position,
+                Box::new(c),
+            ));
             current_offset_position -= SIZE_OF_UOFFSET;
         }
 
@@ -332,5 +354,21 @@ mod tests {
         ]
         .concat();
         assert_eq!(expect, buf);
+    }
+
+    #[test]
+    fn test_deduplicate_vtable() {
+        let mut builder = Builder::new(|builder: &mut Builder| builder.tell());
+        builder.extend_from_slice(&[1u8]);
+        assert_eq!(4, builder.deduplicate_vtable(1));
+        assert_eq!(5, builder.tell());
+
+        builder.extend_from_slice(&[1u8]);
+        assert_eq!(4, builder.deduplicate_vtable(1));
+        assert_eq!(5, builder.tell());
+
+        builder.extend_from_slice(&[2u8]);
+        assert_eq!(5, builder.deduplicate_vtable(1));
+        assert_eq!(6, builder.tell());
     }
 }
