@@ -7,23 +7,23 @@ pub trait Component<'a> {
     fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize;
 }
 
-struct DesignatedComponent<'a> {
-    /// Where to store the UOffset in the buffer.
-    offset_position: usize,
-    component: Box<dyn Component<'a> + 'a>,
-}
-
-impl<'a, T> Component<'a> for T
+impl<'a, F> Component<'a> for F
 where
-    T: FnOnce(&mut Builder<'a>) -> usize,
+    F: FnOnce(&mut Builder<'a>) -> usize,
 {
     fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
         (self)(builder)
     }
 }
 
+pub struct DesignatedComponent<'a> {
+    /// Where to store the UOffset in the buffer.
+    offset_position: usize,
+    component: Box<dyn Component<'a> + 'a>,
+}
+
 impl<'a> DesignatedComponent<'a> {
-    fn new(
+    pub fn new(
         offset_position: usize,
         component: Box<dyn Component<'a> + 'a>,
     ) -> DesignatedComponent<'a> {
@@ -47,14 +47,14 @@ pub struct Builder<'a> {
 }
 
 impl<'a> Builder<'a> {
-    pub fn new<T: Component<'a> + 'a>(root: T) -> Builder<'a> {
+    pub fn new<C: Component<'a> + 'a>(root: C) -> Builder<'a> {
         Builder {
             buffer: vec![0u8; SIZE_OF_UOFFSET],
             components: vec![DesignatedComponent::new(0, Box::new(root))],
         }
     }
 
-    pub fn with_capacity<T: Component<'a> + 'a>(capacity: usize, root: T) -> Builder<'a> {
+    pub fn with_capacity<C: Component<'a> + 'a>(capacity: usize, root: C) -> Builder<'a> {
         let mut buffer = Vec::with_capacity(capacity);
         buffer.extend_from_slice(&[0u8; SIZE_OF_UOFFSET]);
 
@@ -76,8 +76,17 @@ impl<'a> Builder<'a> {
         self.buffer.len()
     }
 
-    pub fn extend_from_slice(&mut self, bytes: &[u8]) {
+    pub fn push_component<C: Component<'a> + 'a>(&mut self, offset_position: usize, component: C) {
+        assert!(offset_position + 4 <= self.tell());
+        self.components.push(DesignatedComponent::new(
+            offset_position,
+            Box::new(component),
+        ))
+    }
+
+    pub fn extend_from_slice(&mut self, bytes: &[u8]) -> &mut Self {
         self.buffer.extend_from_slice(bytes);
+        self
     }
 
     pub fn push_scalar<T: Scalar>(&mut self, s: T) {
@@ -89,6 +98,11 @@ impl<'a> Builder<'a> {
         assert!(position + src.len() <= self.buffer.len());
         let target = &mut self.buffer[position..position + src.len()];
         target.copy_from_slice(src);
+    }
+
+    /// Pad n bytes.
+    pub fn pad(&mut self, n: usize) {
+        self.buffer.resize(self.tell() + n, 0)
     }
 
     /// Append paddings to ensure the next appended data is aligned.
@@ -103,6 +117,7 @@ impl<'a> Builder<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct StringComponent<T>(T);
 
 impl<T: AsRef<str>> StringComponent<T> {
@@ -112,7 +127,7 @@ impl<T: AsRef<str>> StringComponent<T> {
 }
 
 impl<'a, T: AsRef<str>> Component<'a> for StringComponent<T> {
-    fn build(self: Box<Self>, builder: &mut Builder) -> usize {
+    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
         let s = self.0.as_ref();
 
         builder.align(SIZE_OF_LEN);
@@ -126,19 +141,20 @@ impl<'a, T: AsRef<str>> Component<'a> for StringComponent<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct ScalarsVectorComponent<T> {
     scalars: T,
     len: usize,
 }
 
-impl<T: AsRef<[u8]>> ScalarsVectorComponent<T> {
+impl<T> ScalarsVectorComponent<T> {
     pub fn new(scalars: T, len: usize) -> Self {
         ScalarsVectorComponent { scalars, len }
     }
 }
 
 impl<'a, T: AsRef<[u8]>> Component<'a> for ScalarsVectorComponent<T> {
-    fn build(self: Box<Self>, builder: &mut Builder) -> usize {
+    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
         let bytes = self.scalars.as_ref();
 
         let alignment = bytes.len() / self.len;
@@ -147,6 +163,41 @@ impl<'a, T: AsRef<[u8]>> Component<'a> for ScalarsVectorComponent<T> {
 
         builder.push_scalar(self.len as Len);
         builder.extend_from_slice(bytes);
+
+        position
+    }
+}
+
+#[derive(Debug)]
+pub struct ReferencesVectorComponent<T>(T);
+
+impl<T> ReferencesVectorComponent<T> {
+    pub fn new(references: T) -> Self {
+        ReferencesVectorComponent(references)
+    }
+}
+
+impl<'a, T, I, C> Component<'a> for ReferencesVectorComponent<T>
+where
+    T: IntoIterator<Item = C, IntoIter = I>,
+    I: ExactSizeIterator<Item = C> + DoubleEndedIterator<Item = C>,
+    C: Component<'a> + 'a,
+{
+    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
+        builder.align_after(SIZE_OF_LEN, SIZE_OF_UOFFSET);
+        let position = builder.tell();
+
+        let iter = self.0.into_iter();
+        let len = iter.len();
+
+        let mut current_offset_position =
+            position + SIZE_OF_LEN + len * SIZE_OF_UOFFSET - SIZE_OF_UOFFSET;
+        builder.push_scalar(len as Len);
+        builder.pad(len * SIZE_OF_UOFFSET);
+        for c in iter.rev() {
+            builder.push_component(current_offset_position, c);
+            current_offset_position -= SIZE_OF_UOFFSET;
+        }
 
         position
     }
@@ -177,7 +228,7 @@ mod tests {
 
         let expect = [
             // root uoffset
-            &4u32.to_le_bytes(),
+            &4u32.to_le_bytes()[..],
             // len
             &((s.len() as u32).to_le_bytes()),
             // content
@@ -244,6 +295,38 @@ mod tests {
             &2u32.to_le_bytes(),
             // content
             &scalars[..],
+        ]
+        .concat();
+        assert_eq!(expect, buf);
+    }
+
+    #[test]
+    fn test_references_vector_component() {
+        let builder = Builder::new(ReferencesVectorComponent::new(vec![
+            StringComponent::new(String::from("s1")),
+            StringComponent::new(String::from("s2")),
+        ]));
+        let buf = builder.build();
+
+        let expect = [
+            // root uoffset
+            &4u32.to_le_bytes()[..],
+            // len
+            &2u32.to_le_bytes(),
+            // offsets of s1
+            &8u32.to_le_bytes(),
+            // offsets of s2
+            &12u32.to_le_bytes(),
+            // s1.len
+            &2u32.to_le_bytes(),
+            "s1".as_bytes(),
+            // padding
+            &[0u8, 0],
+            // s2.len
+            &2u32.to_le_bytes(),
+            "s2".as_bytes(),
+            // padding
+            &[0u8],
         ]
         .concat();
         assert_eq!(expect, buf);
