@@ -1,5 +1,11 @@
 FLATC := flatc
 
+FBS := $(wildcard tests/common/*.fbs)
+BFBS := $(patsubst %.fbs,%.bfbs,${FBS})
+JSON := $(patsubst %.fbs,%.json,${FBS})
+FLATC_RS := $(patsubst %.fbs,%_generated.rs,${FBS})
+BUILDER := $(patsubst %.fbs,%_builder.rs,${FBS})
+
 ifeq (${VIRTUAL_ENV},)
   PIPENV_RUN := pipenv run
 endif
@@ -10,9 +16,9 @@ test-python:
 test-rust:
 	cargo test
 
-gen: tests/common/example_generated.rs tests/common/example.bfbs tests/common/example.json
+gen: ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
 gen-clean:
-	rm -f tests/common/example_generated.rs tests/common/example.bfbs tests/common/example.json
+	rm -f ${BFBS} ${JSON} ${FLATC_RS}
 
 doc:
 	cargo doc
@@ -28,9 +34,8 @@ doc-publish: doc-clean doc
 	git push --force origin gh-pages
 	git checkout master
 
-tests/common/example_generated.rs: tests/common/example.fbs
-tests/common/example.bfbs: tests/common/example.fbs
-tests/common/example.json: tests/common/example.bfbs
+%_builder.rs: %.bfbs cfb/templates/builder.rs.jinja
+	pipenv run bin/cfbc -o $(shell dirname $@) $<
 
 %_generated.rs: %.fbs
 	$(FLATC) -r -o $(shell dirname $@) $<

@@ -2,7 +2,7 @@
 
 try:
     import cfb.cli
-except ModuleNotFoundError:
+except ImportError:
     import sys
     import os
 
