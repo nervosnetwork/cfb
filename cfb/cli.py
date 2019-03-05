@@ -7,7 +7,9 @@ Options:
   -o <dir>  output directory (default: the same directory of <bfbs>)
   <bfbs>    bfbs file which is generated using `flatc -b --schema <fbs>`.
 """
+import os
 from docopt import docopt
+from cfb.generator import Generator
 
 
 def parse_arguments(argv=None):
@@ -15,4 +17,6 @@ def parse_arguments(argv=None):
 
 
 def main():
-    print(parse_arguments())
+    arguments = parse_arguments()
+    g = Generator(arguments['<bfbs>'])
+    g.generate(arguments['-o'])

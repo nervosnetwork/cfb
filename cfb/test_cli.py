@@ -10,6 +10,7 @@ class TestCli(TestCase):
 
         args = cli.parse_arguments(['test.bfbs'])
         self.assertEqual('test.bfbs', args['<bfbs>'])
+        self.assertEqual(None, args['-o'])
 
         args = cli.parse_arguments(['-o', 'out', 'test.bfbs'])
         self.assertEqual('out', args['-o'])

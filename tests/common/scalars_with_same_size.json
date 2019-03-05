@@ -1,0 +1,33 @@
+{
+  "objects": [
+    {
+      "name": "example.Point",
+      "fields": [
+        {
+          "name": "x",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        },
+        {
+          "name": "y",
+          "type": {
+            "base_type": "UInt"
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}
