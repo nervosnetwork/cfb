@@ -38,8 +38,6 @@ impl<'a> DesignatedComponent<'a> {
         let position = self.component.build(builder);
         let uoffset = (position - self.offset_position) as UOffset;
 
-        dbg!((self.offset_position, uoffset));
-
         builder.set_scalar(self.offset_position, uoffset);
     }
 }
