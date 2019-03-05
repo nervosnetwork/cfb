@@ -1,40 +1,42 @@
 use crate::alignment::{align, align_after};
 use crate::scalar::Scalar;
-use crate::types::{Len, UOffset, SIZE_OF_LEN, SIZE_OF_UOFFSET};
+use crate::types::{
+    Len, UOffset, VOffset, SIZE_OF_LEN, SIZE_OF_SOFFSET, SIZE_OF_UOFFSET, SIZE_OF_VOFFSET,
+};
 use std::collections::HashMap;
 
-pub trait Component<'a> {
+pub trait Component<'c> {
     /// Build the component and return the start position of the component in the buffer.
-    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize;
+    fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize;
 }
 
-impl<'a, F> Component<'a> for F
+impl<'c, F> Component<'c> for F
 where
-    F: FnOnce(&mut Builder<'a>) -> usize,
+    F: FnOnce(&mut Builder<'c>) -> usize,
 {
-    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
+    fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
         (self)(builder)
     }
 }
 
-pub struct DesignatedComponent<'a> {
+pub struct DesignatedComponent<'c> {
     /// Where to store the UOffset in the buffer.
     offset_position: usize,
-    component: Box<dyn Component<'a> + 'a>,
+    component: Box<dyn Component<'c> + 'c>,
 }
 
-impl<'a> DesignatedComponent<'a> {
+impl<'c> DesignatedComponent<'c> {
     pub fn new(
         offset_position: usize,
-        component: Box<dyn Component<'a> + 'a>,
-    ) -> DesignatedComponent<'a> {
+        component: Box<dyn Component<'c> + 'c>,
+    ) -> DesignatedComponent<'c> {
         DesignatedComponent {
             offset_position,
             component,
         }
     }
 
-    fn build(self, builder: &mut Builder<'a>) {
+    fn build(self, builder: &mut Builder<'c>) {
         let position = self.component.build(builder);
         let uoffset = (position - self.offset_position) as UOffset;
 
@@ -42,14 +44,14 @@ impl<'a> DesignatedComponent<'a> {
     }
 }
 
-pub struct Builder<'a> {
+pub struct Builder<'c> {
     buffer: Vec<u8>,
-    components: Vec<DesignatedComponent<'a>>,
+    components: Vec<DesignatedComponent<'c>>,
     vtables: HashMap<Vec<u8>, usize>,
 }
 
-impl<'a> Builder<'a> {
-    pub fn new<C: Component<'a> + 'a>(root: C) -> Builder<'a> {
+impl<'c> Builder<'c> {
+    pub fn new<C: Component<'c> + 'c>(root: C) -> Builder<'c> {
         Builder {
             buffer: vec![0u8; SIZE_OF_UOFFSET],
             components: vec![DesignatedComponent::new(0, Box::new(root))],
@@ -57,7 +59,7 @@ impl<'a> Builder<'a> {
         }
     }
 
-    pub fn with_capacity<C: Component<'a> + 'a>(capacity: usize, root: C) -> Builder<'a> {
+    pub fn with_capacity<C: Component<'c> + 'c>(capacity: usize, root: C) -> Builder<'c> {
         let mut buffer = Vec::with_capacity(capacity);
         buffer.extend_from_slice(&[0u8; SIZE_OF_UOFFSET]);
 
@@ -76,11 +78,15 @@ impl<'a> Builder<'a> {
         self.buffer
     }
 
+    pub fn as_bytes(&self) -> &[u8] {
+        self.buffer.as_slice()
+    }
+
     pub fn tell(&self) -> usize {
         self.buffer.len()
     }
 
-    pub fn push_component(&mut self, component: DesignatedComponent<'a>) {
+    pub fn push_component(&mut self, component: DesignatedComponent<'c>) {
         assert!(component.offset_position + 4 <= self.tell());
         self.components.push(component);
     }
@@ -117,11 +123,14 @@ impl<'a> Builder<'a> {
             .resize(align_after(self.tell(), len, alignment), 0)
     }
 
+    pub fn start_vtable<'b>(&'b mut self) -> VTableBuilder<'b, 'c> {
+        VTableBuilder::new(self)
+    }
+
     /// Vtable is at the top of the buffer with `nbytes` bytes. Return the position of the vtable
     /// in the buffer after deduplication.
-    pub fn deduplicate_vtable(&mut self, vtable_nbytes: usize) -> usize {
+    fn deduplicate_vtable(&mut self, vtable_begin: usize) -> usize {
         let vtable_end = self.tell();
-        let vtable_begin = vtable_end - vtable_nbytes;
         let vtable_slice = &self.buffer[vtable_begin..vtable_end];
 
         if let Some(&offset) = self.vtables.get(vtable_slice) {
@@ -136,6 +145,46 @@ impl<'a> Builder<'a> {
     }
 }
 
+pub struct VTableBuilder<'b, 'c> {
+    builder: &'b mut Builder<'c>,
+    vtable_begin: usize,
+    table_nbytes: VOffset,
+}
+
+impl<'b, 'c> VTableBuilder<'b, 'c> {
+    fn new(builder: &'b mut Builder<'c>) -> Self {
+        let vtable_begin = builder.tell();
+
+        VTableBuilder {
+            builder,
+            vtable_begin,
+            table_nbytes: SIZE_OF_SOFFSET as VOffset,
+        }
+    }
+
+    pub fn add_field(&mut self, offset_in_vtable: usize, size: VOffset) {
+        let voffset_position = self.vtable_begin + offset_in_vtable;
+        if voffset_position < self.builder.tell() {
+            self.builder.set_scalar(voffset_position, self.table_nbytes);
+        } else {
+            self.builder.pad(voffset_position - self.builder.tell());
+            self.builder.push_scalar(self.table_nbytes);
+        }
+        self.table_nbytes += size;
+    }
+
+    pub fn finish(self) -> usize {
+        self.builder.set_scalar(
+            self.vtable_begin,
+            (self.builder.tell() - self.vtable_begin) as VOffset,
+        );
+        self.builder
+            .set_scalar(self.vtable_begin + SIZE_OF_VOFFSET, self.table_nbytes);
+
+        self.builder.deduplicate_vtable(self.vtable_begin)
+    }
+}
+
 #[derive(Debug)]
 pub struct StringComponent<T>(T);
 
@@ -145,8 +194,8 @@ impl<T: AsRef<str>> StringComponent<T> {
     }
 }
 
-impl<'a, T: AsRef<str>> Component<'a> for StringComponent<T> {
-    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
+impl<'c, T: AsRef<str>> Component<'c> for StringComponent<T> {
+    fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
         let s = self.0.as_ref();
 
         builder.align(SIZE_OF_LEN);
@@ -172,8 +221,8 @@ impl<T> ScalarsVectorComponent<T> {
     }
 }
 
-impl<'a, T: AsRef<[u8]>> Component<'a> for ScalarsVectorComponent<T> {
-    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
+impl<'c, T: AsRef<[u8]>> Component<'c> for ScalarsVectorComponent<T> {
+    fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
         let bytes = self.scalars.as_ref();
 
         let alignment = bytes.len() / self.len;
@@ -196,13 +245,13 @@ impl<T> ReferencesVectorComponent<T> {
     }
 }
 
-impl<'a, T, I, C> Component<'a> for ReferencesVectorComponent<T>
+impl<'c, T, I, C> Component<'c> for ReferencesVectorComponent<T>
 where
     T: IntoIterator<Item = C, IntoIter = I>,
     I: ExactSizeIterator<Item = C> + DoubleEndedIterator<Item = C>,
-    C: Component<'a> + 'a,
+    C: Component<'c> + 'c,
 {
-    fn build(self: Box<Self>, builder: &mut Builder<'a>) -> usize {
+    fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
         builder.align_after(SIZE_OF_LEN, SIZE_OF_UOFFSET);
         let position = builder.tell();
 
@@ -357,16 +406,62 @@ mod tests {
     #[test]
     fn test_deduplicate_vtable() {
         let mut builder = Builder::new(|builder: &mut Builder| builder.tell());
-        builder.extend_from_slice(&[1u8]);
-        assert_eq!(4, builder.deduplicate_vtable(1));
-        assert_eq!(5, builder.tell());
 
-        builder.extend_from_slice(&[1u8]);
-        assert_eq!(4, builder.deduplicate_vtable(1));
-        assert_eq!(5, builder.tell());
+        {
+            let mut vt = builder.start_vtable();
+            vt.add_field(4, 4);
+            assert_eq!(4, vt.finish());
+            assert_eq!(10, builder.tell());
+        }
 
-        builder.extend_from_slice(&[2u8]);
-        assert_eq!(5, builder.deduplicate_vtable(1));
-        assert_eq!(6, builder.tell());
+        {
+            let mut vt = builder.start_vtable();
+            vt.add_field(4, 4);
+            assert_eq!(4, vt.finish());
+            assert_eq!(10, builder.tell());
+        }
+
+        {
+            let mut vt = builder.start_vtable();
+            vt.add_field(4, 8);
+            assert_eq!(10, vt.finish());
+            assert_eq!(16, builder.tell());
+        }
+    }
+
+    #[test]
+    fn test_vtable_builder() {
+        let mut builder = Builder::new(|builder: &mut Builder| builder.tell());
+
+        {
+            let mut vt = builder.start_vtable();
+            vt.add_field(4, 4);
+            vt.finish();
+
+            let expect = [
+                &6u16.to_le_bytes()[..],
+                &8u16.to_le_bytes(),
+                &4u16.to_le_bytes(),
+            ]
+            .concat();
+            assert_eq!(expect, &builder.as_bytes()[4..10]);
+        }
+
+        {
+            let mut vt = builder.start_vtable();
+            vt.add_field(8, 4);
+            vt.add_field(4, 2);
+            vt.finish();
+
+            let expect = [
+                &10u16.to_le_bytes()[..],
+                &10u16.to_le_bytes(),
+                &8u16.to_le_bytes(),
+                &0u16.to_le_bytes(),
+                &4u16.to_le_bytes(),
+            ]
+            .concat();
+            assert_eq!(expect, &builder.as_bytes()[10..20]);
+        }
     }
 }
