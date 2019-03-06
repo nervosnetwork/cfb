@@ -1,0 +1,6 @@
+namespace example;
+
+table Account {
+  year: uint32;
+  balance: uint64;
+}

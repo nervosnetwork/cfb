@@ -36,9 +36,11 @@ pub mod example {
             let table_start = builder.tell();
             builder.push_scalar((table_start - vtable_start) as SOffset);
             if self.x != 0 {
+                builder.align(Self::ALIGNMENT_X);
                 builder.push_scalar(self.x);
             }
             if self.y != 0 {
+                builder.align(Self::ALIGNMENT_Y);
                 builder.push_scalar(self.y);
             }
 

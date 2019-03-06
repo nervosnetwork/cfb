@@ -15,6 +15,20 @@ SCALARS_SIZE = dict([
     (BaseType.Double, 8),
 ])
 
+SCALARS_TYPE = dict([
+    (BaseType.Bool, 'bool'),
+    (BaseType.Byte, 'i8'),
+    (BaseType.Short, 'i16'),
+    (BaseType.Int, 'i32'),
+    (BaseType.Long, 'i64'),
+    (BaseType.UByte, 'u8'),
+    (BaseType.UShort, 'u16'),
+    (BaseType.UInt, 'u32'),
+    (BaseType.ULong, 'u64'),
+    (BaseType.Float, 'f32'),
+    (BaseType.Double, 'f64'),
+])
+
 
 class Context(object):
     def __init__(self, schema):
@@ -23,6 +37,9 @@ class Context(object):
 
     def if_not_default(self, field):
         return 'self.{0} != 0'.format(self.name_of(field))
+
+    def type_of(self, field):
+        return SCALARS_TYPE[field.Type().BaseType()]
 
     def size_of(self, field):
         return SCALARS_SIZE[field.Type().BaseType()]
@@ -35,3 +52,14 @@ class Context(object):
 
     def name_of(self, entity):
         return entity.Name().decode('utf-8')
+
+    def fields_sorted_by_alignement(self, object):
+        return list(sorted((object.Fields(i) for i in range(object.FieldsLength())),
+                           key=lambda f: (self.alignment_of(f),
+                                          self.size_of(f)),
+                           reverse=True))
+
+    def fields_sorted_by_offset(self, object):
+        return list(sorted((object.Fields(i) for i in range(object.FieldsLength())),
+                           key=lambda f: f.Offset(),
+                           ))

@@ -1,3 +1,9 @@
+#[rustfmt::skip]
+pub mod scalars_with_different_size_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod scalars_with_different_size_generated;
+#[rustfmt::skip]
 pub mod scalars_with_same_size_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]

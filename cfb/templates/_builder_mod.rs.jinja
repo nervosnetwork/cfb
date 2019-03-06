@@ -6,13 +6,13 @@ use cfb::types::{SOffset, SIZE_OF_SOFFSET};
 
 #[derive(Default, Debug)]
 pub struct {{ name }}Component {
-    pub x: u64,
-    pub y: u64,
+    {%- for field in cfb.fields_sorted_by_offset(object) %}
+    pub {{ cfb.name_of(field) }}: {{ cfb.type_of(field) }},
+    {%- endfor %}
 }
 
 impl {{ name }}Component {
-    {%- for i in range(object.FieldsLength()) %}
-      {%- set field = object.Fields(i) %}
+    {%- for field in cfb.fields_sorted_by_offset(object) %}
     const VT_{{ cfb.name_of(field) | upper }}: usize = {{ field.Offset() }};
     const SIZE_{{ cfb.name_of(field) | upper }}: usize = {{ cfb.size_of(field) }};
     const ALIGNMENT_{{ cfb.name_of(field) | upper }}: usize = {{ cfb.alignment_of(field) }};
@@ -24,8 +24,7 @@ impl<'c> Component<'c> for {{ name }}Component {
     fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
         let vtable_start = {
             let mut vtable = builder.start_vtable();
-            {%- for i in range(object.FieldsLength()) %}
-              {%- set field = object.Fields(i) %}
+            {%- for field in cfb.fields_sorted_by_alignement(object): %}
             if {{ cfb.if_not_default(field) }} {
                 vtable.add_field(Self::VT_{{ cfb.name_of(field) | upper }}, Self::SIZE_{{ cfb.name_of(field) | upper }}, Self::ALIGNMENT_{{ cfb.name_of(field) | upper }});
             }
@@ -38,9 +37,9 @@ impl<'c> Component<'c> for {{ name }}Component {
         let table_start = builder.tell();
         builder.push_scalar((table_start - vtable_start) as SOffset);
 
-        {%- for i in range(object.FieldsLength()) %}
-          {%- set field = object.Fields(i) %}
+        {%- for field in cfb.fields_sorted_by_alignement(object): %}
         if {{ cfb.if_not_default(field) }} {
+            builder.align(Self::ALIGNMENT_{{ cfb.name_of(field) | upper }});
             builder.push_scalar(self.{{ cfb.name_of(field) }});
         }
         {%- endfor %}
