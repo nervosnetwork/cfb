@@ -1,4 +1,3 @@
-import os
 from os import path
 from unittest import TestCase
 from cfb.reflection.Schema import Schema
@@ -6,7 +5,7 @@ from cfb.reflection.Schema import Schema
 
 class TestSchema(TestCase):
     def testGetRootAsSchema(self):
-        dir_path = path.join(path.dirname(path.dirname(path.dirname(os.path.realpath(
+        dir_path = path.join(path.dirname(path.dirname(path.dirname(path.realpath(
             __file__)))), 'tests', 'common', 'scalars_with_same_size.bfbs')
         with open(dir_path, 'rb') as bfbs_file:
             buf = bytearray(bfbs_file.read())

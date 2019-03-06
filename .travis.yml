@@ -17,9 +17,7 @@ matrix:
         - cargo clippy --version || rustup component add clippy-preview
       script: make ci-rust
     - language: python
-      python:
-        - 2.7
-        - 3.7
+      python: 3.7
       install:
         - pip install pipenv
         - pipenv install --dev
