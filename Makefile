@@ -6,6 +6,8 @@ JSON := $(patsubst %.fbs,%.json,${FBS})
 FLATC_RS := $(patsubst %.fbs,%_generated.rs,${FBS})
 BUILDER := $(patsubst %.fbs,%_builder.rs,${FBS})
 
+TEMPLATES := $(wildcard cfb/templates/*.jinja)
+
 ifeq (${VIRTUAL_ENV},)
   PIPENV_RUN := pipenv run
 endif
@@ -18,7 +20,8 @@ test-rust:
 
 gen: ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
 gen-clean:
-	rm -f ${BFBS} ${JSON} ${FLATC_RS}
+	rm -f ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
+gen-force: gen-clean gen
 
 doc:
 	cargo doc
@@ -34,7 +37,7 @@ doc-publish: doc-clean doc
 	git push --force origin gh-pages
 	git checkout master
 
-%_builder.rs: %.bfbs cfb/templates/builder.rs.jinja
+%_builder.rs: %.bfbs ${TEMPLATES}
 	pipenv run bin/cfbc -o $(shell dirname $@) $<
 
 %_generated.rs: %.fbs
@@ -47,20 +50,23 @@ doc-publish: doc-clean doc
 	$(FLATC) -t --strict-json -o $(shell dirname $@) reflection.fbs -- $<
 
 fmt:
-	cargo fmt -- --check
+	cargo fmt --all -- --check
 
 clippy:
-	cargo clippy -- -D warnings -D clippy::clone_on_ref_ptr -D unused_extern_crates -D clippy::enum_glob_use
+	cargo clippy --all --all-targets --all-features -- -D warnings -D clippy::clone_on_ref_ptr -D clippy::enum_glob_use
 
 ci: ci-rust ci-python
 
 ci-rust: fmt clippy test-rust
 	git diff --exit-code Cargo.lock
 
-ci-python: test-python
+ci-python: test-python ensure-gen
+
+ensure-gen: gen
+	git diff --exit-code tests/common
 
 .PHONY: test test-python test-rust
-.PHONY: gen gen-clean
+.PHONY: gen gen-clean gen-force
 .PHONY: doc doc-clean doc-publish
 .PHONY: fmt clippy
-.PHONY: ci ci-rust ci-python
+.PHONY: ci ci-rust ci-python ensure-gen

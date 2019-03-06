@@ -1,0 +1,61 @@
+{% if mod.has_definitions() -%}
+use cfb::builder::{Builder, Component};
+use cfb::types::{SOffset, SIZE_OF_SOFFSET};
+
+  {%- for name, object in mod.objects.items() %}
+
+#[derive(Default, Debug)]
+pub struct {{ name }}Component {
+    pub x: u64,
+    pub y: u64,
+}
+
+impl {{ name }}Component {
+    {%- for i in range(object.FieldsLength()) %}
+      {%- set field = object.Fields(i) %}
+    const VT_{{ cfb.name_of(field) | upper }}: usize = {{ field.Offset() }};
+    const SIZE_{{ cfb.name_of(field) | upper }}: usize = {{ cfb.size_of(field) }};
+    const ALIGNMENT_{{ cfb.name_of(field) | upper }}: usize = {{ cfb.alignment_of(field) }};
+    {%- endfor %}
+    const MAX_ALIGNMENT: usize = {{ cfb.max_alignment_of(object) }};
+}
+
+impl<'c> Component<'c> for {{ name }}Component {
+    fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
+        let vtable_start = {
+            let mut vtable = builder.start_vtable();
+            {%- for i in range(object.FieldsLength()) %}
+              {%- set field = object.Fields(i) %}
+            if {{ cfb.if_not_default(field) }} {
+                vtable.add_field(Self::VT_{{ cfb.name_of(field) | upper }}, Self::SIZE_{{ cfb.name_of(field) | upper }}, Self::ALIGNMENT_{{ cfb.name_of(field) | upper }});
+            }
+            {%- endfor %}
+            vtable.finish()
+        };
+
+        builder.align_after(SIZE_OF_SOFFSET, Self::MAX_ALIGNMENT);
+
+        let table_start = builder.tell();
+        builder.push_scalar((table_start - vtable_start) as SOffset);
+
+        {%- for i in range(object.FieldsLength()) %}
+          {%- set field = object.Fields(i) %}
+        if {{ cfb.if_not_default(field) }} {
+            builder.push_scalar(self.{{ cfb.name_of(field) }});
+        }
+        {%- endfor %}
+
+        table_start
+    }
+}
+  {%- endfor %}
+{% endif -%}
+
+{% for name, mod in mod.children.items() -%}
+{% set mod_content %}
+  {%- include "_builder_mod.rs.jinja" -%}
+{% endset -%}
+pub mod {{ name }} {
+    {{ mod_content | indent }}
+}
+{% endfor %}

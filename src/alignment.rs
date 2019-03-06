@@ -76,7 +76,7 @@ mod tests {
 
     proptest! {
         #[test]
-        fn align_proptest(
+        fn proptest_align(
             current_position: usize,
             alignment in (0u32..16).prop_map(|d| 2usize.pow(d)),
         ) {
@@ -91,7 +91,7 @@ mod tests {
         }
 
         #[test]
-        fn align_after_proptest(
+        fn proptest_align_after(
             current_position: usize,
             len in (0u32..16).prop_map(|d| 2usize.pow(d)),
             alignment in (0u32..16).prop_map(|d| 2usize.pow(d)),

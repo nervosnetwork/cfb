@@ -129,59 +129,68 @@ impl<'c> Builder<'c> {
 
     /// Vtable is at the top of the buffer with `nbytes` bytes. Return the position of the vtable
     /// in the buffer after deduplication.
-    fn deduplicate_vtable(&mut self, vtable_begin: usize) -> usize {
+    fn deduplicate_vtable(&mut self, vtable_start: usize) -> usize {
         let vtable_end = self.tell();
-        let vtable_slice = &self.buffer[vtable_begin..vtable_end];
+        let vtable_slice = &self.buffer[vtable_start..vtable_end];
 
         if let Some(&offset) = self.vtables.get(vtable_slice) {
             // Table alignment must be larger than vtable, so it is OK to leave the paddings in the
             // buffer.
-            self.buffer.truncate(vtable_begin);
+            self.buffer.truncate(vtable_start);
             offset
         } else {
-            self.vtables.insert(vtable_slice.to_owned(), vtable_begin);
-            vtable_begin
+            self.vtables.insert(vtable_slice.to_owned(), vtable_start);
+            vtable_start
         }
     }
 }
 
 pub struct VTableBuilder<'b, 'c> {
     builder: &'b mut Builder<'c>,
-    vtable_begin: usize,
-    table_nbytes: VOffset,
+    vtable_start: usize,
+    fields_nbytes: usize,
 }
 
 impl<'b, 'c> VTableBuilder<'b, 'c> {
     fn new(builder: &'b mut Builder<'c>) -> Self {
-        let vtable_begin = builder.tell();
+        builder.align(SIZE_OF_VOFFSET);
+        let vtable_start = builder.tell();
 
         VTableBuilder {
             builder,
-            vtable_begin,
-            table_nbytes: SIZE_OF_SOFFSET as VOffset,
+            vtable_start,
+            fields_nbytes: 0,
         }
     }
 
-    pub fn add_field(&mut self, offset_in_vtable: usize, size: VOffset) {
-        let voffset_position = self.vtable_begin + offset_in_vtable;
+    pub fn add_field(&mut self, offset_in_vtable: usize, size: usize, alignment: usize) {
+        let voffset_position = self.vtable_start + offset_in_vtable;
+        let offset_in_fields = align(self.fields_nbytes, alignment);
+
         if voffset_position < self.builder.tell() {
-            self.builder.set_scalar(voffset_position, self.table_nbytes);
+            self.builder.set_scalar(
+                voffset_position,
+                (offset_in_fields + SIZE_OF_SOFFSET) as VOffset,
+            );
         } else {
             self.builder.pad(voffset_position - self.builder.tell());
-            self.builder.push_scalar(self.table_nbytes);
+            self.builder
+                .push_scalar((offset_in_fields + SIZE_OF_SOFFSET) as VOffset);
         }
-        self.table_nbytes += size;
+        self.fields_nbytes = offset_in_fields + size;
     }
 
     pub fn finish(self) -> usize {
         self.builder.set_scalar(
-            self.vtable_begin,
-            (self.builder.tell() - self.vtable_begin) as VOffset,
+            self.vtable_start,
+            (self.builder.tell() - self.vtable_start) as VOffset,
         );
-        self.builder
-            .set_scalar(self.vtable_begin + SIZE_OF_VOFFSET, self.table_nbytes);
+        self.builder.set_scalar(
+            self.vtable_start + SIZE_OF_VOFFSET,
+            (self.fields_nbytes + SIZE_OF_SOFFSET) as VOffset,
+        );
 
-        self.builder.deduplicate_vtable(self.vtable_begin)
+        self.builder.deduplicate_vtable(self.vtable_start)
     }
 }
 
@@ -390,12 +399,12 @@ mod tests {
             &12u32.to_le_bytes(),
             // s1.len
             &2u32.to_le_bytes(),
-            "s1".as_bytes(),
+            b"s1",
             // padding
             &[0u8, 0],
             // s2.len
             &2u32.to_le_bytes(),
-            "s2".as_bytes(),
+            b"s2",
             // padding
             &[0u8],
         ]
@@ -409,21 +418,21 @@ mod tests {
 
         {
             let mut vt = builder.start_vtable();
-            vt.add_field(4, 4);
+            vt.add_field(4, 4, 1);
             assert_eq!(4, vt.finish());
             assert_eq!(10, builder.tell());
         }
 
         {
             let mut vt = builder.start_vtable();
-            vt.add_field(4, 4);
+            vt.add_field(4, 4, 1);
             assert_eq!(4, vt.finish());
             assert_eq!(10, builder.tell());
         }
 
         {
             let mut vt = builder.start_vtable();
-            vt.add_field(4, 8);
+            vt.add_field(4, 8, 1);
             assert_eq!(10, vt.finish());
             assert_eq!(16, builder.tell());
         }
@@ -435,7 +444,7 @@ mod tests {
 
         {
             let mut vt = builder.start_vtable();
-            vt.add_field(4, 4);
+            vt.add_field(4, 4, 1);
             vt.finish();
 
             let expect = [
@@ -449,8 +458,8 @@ mod tests {
 
         {
             let mut vt = builder.start_vtable();
-            vt.add_field(8, 4);
-            vt.add_field(4, 2);
+            vt.add_field(8, 4, 1);
+            vt.add_field(4, 2, 1);
             vt.finish();
 
             let expect = [
@@ -462,6 +471,28 @@ mod tests {
             ]
             .concat();
             assert_eq!(expect, &builder.as_bytes()[10..20]);
+        }
+    }
+
+    #[test]
+    fn test_vtable_builder_alignment() {
+        let mut builder = Builder::new(|builder: &mut Builder| builder.tell());
+
+        {
+            let mut vt = builder.start_vtable();
+            vt.add_field(8, 6, 4);
+            vt.add_field(4, 4, 4);
+            vt.finish();
+
+            let expect = [
+                &10u16.to_le_bytes()[..],
+                &16u16.to_le_bytes(),
+                &12u16.to_le_bytes(),
+                &0u16.to_le_bytes(),
+                &4u16.to_le_bytes(),
+            ]
+            .concat();
+            assert_eq!(expect, &builder.as_bytes()[4..14]);
         }
     }
 }

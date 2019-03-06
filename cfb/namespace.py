@@ -8,6 +8,9 @@ class Namespace(object):
         self.objects = OrderedDict()
         self.enums = OrderedDict()
 
+    def has_definitions(self):
+        return len(self.objects) > 0 or len(self.enums) > 0
+
     def append_object(self, o):
         name = o.Name().decode('utf-8')
         parts = name.split('.')

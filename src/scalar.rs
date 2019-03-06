@@ -174,7 +174,10 @@ mod tests {
         assert_eq!(false, bool::from_le(false.to_le()));
         assert_eq!(1u8, u8::from_le(1u8.to_le()));
         assert_eq!(1u16, u16::from_le(1u16.to_le()));
-        assert_eq!(1f32, f32::from_le(1f32.to_le()));
+        #[allow(clippy::float_cmp)]
+        {
+            assert_eq!(1f32, f32::from_le(1f32.to_le()));
+        }
 
         assert_eq!(1u8, 1u8.to_le());
 

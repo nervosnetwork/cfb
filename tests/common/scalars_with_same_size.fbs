@@ -1,6 +1,6 @@
 namespace example;
 
 table Point {
-  x: uint32;
-  y: uint32;
+  x: uint64;
+  y: uint64;
 }

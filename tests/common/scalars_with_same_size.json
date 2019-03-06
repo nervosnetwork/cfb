@@ -6,14 +6,14 @@
         {
           "name": "x",
           "type": {
-            "base_type": "UInt"
+            "base_type": "ULong"
           },
           "offset": 4
         },
         {
           "name": "y",
           "type": {
-            "base_type": "UInt"
+            "base_type": "ULong"
           },
           "id": 1,
           "offset": 6

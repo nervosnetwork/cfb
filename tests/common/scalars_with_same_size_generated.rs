@@ -49,18 +49,18 @@ impl<'a> Point<'a> {
     pub const VT_Y: flatbuffers::VOffsetT = 6;
 
   #[inline]
-  pub fn x(&self) -> u32 {
-    self._tab.get::<u32>(Point::VT_X, Some(0)).unwrap()
+  pub fn x(&self) -> u64 {
+    self._tab.get::<u64>(Point::VT_X, Some(0)).unwrap()
   }
   #[inline]
-  pub fn y(&self) -> u32 {
-    self._tab.get::<u32>(Point::VT_Y, Some(0)).unwrap()
+  pub fn y(&self) -> u64 {
+    self._tab.get::<u64>(Point::VT_Y, Some(0)).unwrap()
   }
 }
 
 pub struct PointArgs {
-    pub x: u32,
-    pub y: u32,
+    pub x: u64,
+    pub y: u64,
 }
 impl<'a> Default for PointArgs {
     #[inline]
@@ -77,12 +77,12 @@ pub struct PointBuilder<'a: 'b, 'b> {
 }
 impl<'a: 'b, 'b> PointBuilder<'a, 'b> {
   #[inline]
-  pub fn add_x(&mut self, x: u32) {
-    self.fbb_.push_slot::<u32>(Point::VT_X, x, 0);
+  pub fn add_x(&mut self, x: u64) {
+    self.fbb_.push_slot::<u64>(Point::VT_X, x, 0);
   }
   #[inline]
-  pub fn add_y(&mut self, y: u32) {
-    self.fbb_.push_slot::<u32>(Point::VT_Y, y, 0);
+  pub fn add_y(&mut self, y: u64) {
+    self.fbb_.push_slot::<u64>(Point::VT_Y, y, 0);
   }
   #[inline]
   pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> PointBuilder<'a, 'b> {
