@@ -155,6 +155,7 @@ impl<'b, 'c> VTableBuilder<'b, 'c> {
     fn new(builder: &'b mut Builder<'c>) -> Self {
         builder.align(SIZE_OF_VOFFSET);
         let vtable_start = builder.tell();
+        builder.pad(2 * SIZE_OF_VOFFSET);
 
         VTableBuilder {
             builder,
