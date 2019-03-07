@@ -13,6 +13,11 @@ pub mod scalars_with_same_size_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 pub mod scalars_with_same_size_generated;
+#[rustfmt::skip]
+pub mod struct_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod struct_generated;
 
 pub fn hex(bytes: &[u8]) -> String {
     bytes

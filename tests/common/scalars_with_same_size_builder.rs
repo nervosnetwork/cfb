@@ -1,14 +1,19 @@
 pub mod example {
+    #![allow(unused_imports)]
+
     use cfb::builder::{Builder, Component};
+    use cfb::scalar::Scalar;
     use cfb::types::{SOffset, SIZE_OF_SOFFSET};
+    #[cfg(not(target_endian = "little"))]
+    use std::mem::transmute;
 
     #[derive(Default, Debug)]
-    pub struct PointComponent {
+    pub struct Point {
         pub x: u64,
         pub y: u64,
     }
 
-    impl PointComponent {
+    impl Point {
         const VT_X: usize = 4;
         const SIZE_X: usize = 8;
         const ALIGNMENT_X: usize = 8;
@@ -18,7 +23,7 @@ pub mod example {
         const ALIGNMENT: usize = 8;
     }
 
-    impl<'c> Component<'c> for PointComponent {
+    impl<'c> Component<'c> for Point {
         fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();

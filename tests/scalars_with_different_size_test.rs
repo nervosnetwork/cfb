@@ -5,7 +5,7 @@ use proptest::prelude::*;
 
 fn _test_scalars_with_different_size_builder(year: u32, balance: u64) {
     let buf = Builder::new(
-        common::scalars_with_different_size_builder::example::AccountComponent { year, balance },
+        common::scalars_with_different_size_builder::example::Account { year, balance },
     )
     .build();
 

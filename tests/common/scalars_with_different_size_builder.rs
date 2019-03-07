@@ -1,14 +1,19 @@
 pub mod example {
+    #![allow(unused_imports)]
+
     use cfb::builder::{Builder, Component};
+    use cfb::scalar::Scalar;
     use cfb::types::{SOffset, SIZE_OF_SOFFSET};
+    #[cfg(not(target_endian = "little"))]
+    use std::mem::transmute;
 
     #[derive(Default, Debug)]
-    pub struct AccountComponent {
+    pub struct Account {
         pub year: u32,
         pub balance: u64,
     }
 
-    impl AccountComponent {
+    impl Account {
         const VT_YEAR: usize = 4;
         const SIZE_YEAR: usize = 4;
         const ALIGNMENT_YEAR: usize = 4;
@@ -18,7 +23,7 @@ pub mod example {
         const ALIGNMENT: usize = 8;
     }
 
-    impl<'c> Component<'c> for AccountComponent {
+    impl<'c> Component<'c> for Account {
         fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();

@@ -96,11 +96,13 @@ impl<'c> Builder<'c> {
         self
     }
 
-    pub fn push_scalar<T: Scalar>(&mut self, s: T) {
-        self.buffer.extend_from_slice(s.as_bytes());
+    pub fn push_scalar<T: Scalar>(&mut self, mut s: T) {
+        s = s.to_le();
+        self.buffer.extend_from_slice(s.to_le().as_bytes());
     }
 
-    pub fn set_scalar<T: Scalar>(&mut self, position: usize, s: T) {
+    pub fn set_scalar<T: Scalar>(&mut self, position: usize, mut s: T) {
+        s = s.to_le();
         let src = s.as_bytes();
         assert!(position + src.len() <= self.buffer.len());
         let target = &mut self.buffer[position..position + src.len()];

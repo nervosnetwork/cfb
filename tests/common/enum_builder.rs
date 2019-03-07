@@ -1,7 +1,9 @@
 pub mod example {
+    #![allow(unused_imports)]
+
     use cfb::builder::{Builder, Component};
-    use cfb::types::{SOffset, SIZE_OF_SOFFSET};
     use cfb::scalar::Scalar;
+    use cfb::types::{SOffset, SIZE_OF_SOFFSET};
     #[cfg(not(target_endian = "little"))]
     use std::mem::transmute;
 
@@ -44,18 +46,18 @@ pub mod example {
     }
 
     #[derive(Default, Debug)]
-    pub struct BagComponent {
+    pub struct Bag {
         pub color: Color,
     }
 
-    impl BagComponent {
+    impl Bag {
         const VT_COLOR: usize = 4;
         const SIZE_COLOR: usize = 1;
         const ALIGNMENT_COLOR: usize = 1;
         const ALIGNMENT: usize = 1;
     }
 
-    impl<'c> Component<'c> for BagComponent {
+    impl<'c> Component<'c> for Bag {
         fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();

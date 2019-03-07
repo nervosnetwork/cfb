@@ -5,7 +5,7 @@ use proptest::prelude::*;
 use std::mem::transmute;
 
 fn _test_enum_builder(color: i8) {
-    let buf = Builder::new(common::enum_builder::example::BagComponent {
+    let buf = Builder::new(common::enum_builder::example::Bag {
         color: unsafe { transmute(color) },
     })
     .build();
