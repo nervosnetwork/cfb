@@ -20,59 +20,6 @@ pub trait Scalar: Sized {
     }
 }
 
-/// The macro `impl_scalar_for_enum` implements trait `Scalar` for enum.
-///
-/// The enum must specify a integer type via repr.
-///
-/// # Examples
-///
-/// ```
-/// #[macro_use] extern crate cfb;
-/// use cfb::scalar::Scalar;
-///
-/// #[repr(u16)]
-/// #[derive(Copy, Clone)]
-/// enum Side {
-///   Left = 1,
-///   Right = 2,
-/// }
-/// impl_scalar_for_enum!(Side, u16);
-///
-/// assert_eq!(1u16, Side::from_le(Side::Left.to_le()) as u16);
-/// assert_eq!(&[1u8, 0], Side::Left.to_le().as_bytes());
-/// assert_eq!(2u16, Side::from_le(Side::Right.to_le()) as u16);
-/// ```
-#[macro_export]
-macro_rules! impl_scalar_for_enum {
-    ($ty:ident, $repr:ident) => {{
-        use cfb::scalar::Scalar;
-        use std::mem::transmute;
-
-        impl Scalar for $ty {
-            fn to_le(self) -> Self {
-                #[cfg(target_endian = "little")]
-                {
-                    self
-                }
-                #[cfg(not(target_endian = "little"))]
-                {
-                    unsafe { transmute((self as $repr).swap_bytes()) }
-                }
-            }
-            fn from_le(x: Self) -> Self {
-                #[cfg(target_endian = "little")]
-                {
-                    x
-                }
-                #[cfg(not(target_endian = "little"))]
-                {
-                    unsafe { transmute((x as $repr).swap_bytes()) }
-                }
-            }
-        }
-    }};
-}
-
 const FALSE_BYTES: &[u8] = &[0];
 const TRUE_BYTES: &[u8] = &[1];
 
