@@ -46,6 +46,6 @@ class Namespace(object):
         for i in range(schema.ObjectsLength()):
             root_namespace.append_object(schema.Objects(i))
         for i in range(schema.EnumsLength()):
-            root_namespace.append_object(schema.Enums(i))
+            root_namespace.append_enum(schema.Enums(i))
 
         return root_namespace

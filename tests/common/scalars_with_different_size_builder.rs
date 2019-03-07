@@ -15,31 +15,31 @@ pub mod example {
         const VT_BALANCE: usize = 6;
         const SIZE_BALANCE: usize = 8;
         const ALIGNMENT_BALANCE: usize = 8;
-        const MAX_ALIGNMENT: usize = 8;
+        const ALIGNMENT: usize = 8;
     }
 
     impl<'c> Component<'c> for AccountComponent {
         fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();
-                if self.balance != 0 {
+                if self.balance != 0u64 {
                     vtable.add_field(Self::VT_BALANCE, Self::SIZE_BALANCE, Self::ALIGNMENT_BALANCE);
                 }
-                if self.year != 0 {
+                if self.year != 0u32 {
                     vtable.add_field(Self::VT_YEAR, Self::SIZE_YEAR, Self::ALIGNMENT_YEAR);
                 }
                 vtable.finish()
             };
 
-            builder.align_after(SIZE_OF_SOFFSET, Self::MAX_ALIGNMENT);
+            builder.align_after(SIZE_OF_SOFFSET, Self::ALIGNMENT);
 
             let table_start = builder.tell();
             builder.push_scalar((table_start - vtable_start) as SOffset);
-            if self.balance != 0 {
+            if self.balance != 0u64 {
                 builder.align(Self::ALIGNMENT_BALANCE);
                 builder.push_scalar(self.balance);
             }
-            if self.year != 0 {
+            if self.year != 0u32 {
                 builder.align(Self::ALIGNMENT_YEAR);
                 builder.push_scalar(self.year);
             }
@@ -47,5 +47,4 @@ pub mod example {
             table_start
         }
     }
-
 }

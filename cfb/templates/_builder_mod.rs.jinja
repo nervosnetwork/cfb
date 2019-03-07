@@ -1,23 +1,72 @@
-{% if mod.has_definitions() -%}
+{%- if mod.has_definitions() -%}
+{%- if mod.objects|length > 0 -%}
 use cfb::builder::{Builder, Component};
 use cfb::types::{SOffset, SIZE_OF_SOFFSET};
+{%- endif -%}
+{%- if mod.enums|length > 0 %}
+use cfb::scalar::Scalar;
+#[cfg(not(target_endian = "little"))]
+use std::mem::transmute;
+{%- endif -%}
+
+  {%- for name, enum in mod.enums.items() %}
+{%- set repr = cfb.rust_type(enum.UnderlyingType().BaseType()) %}
+
+#[repr({{ repr }})]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum {{ name }} {
+    Red = 0,
+    Green = 1,
+    Blue = 2,
+}
+
+impl Default for Color {
+    fn default() -> Self {
+        {{ cfb.enum_default(enum) }}
+    }
+}
+
+impl Scalar for {{ name }} {
+    fn to_le(self) -> Self {
+        #[cfg(target_endian = "little")]
+        {
+            self
+        }
+        #[cfg(not(target_endian = "little"))]
+        {
+            unsafe { transmute((self as {{ repr }}).swap_bytes()) }
+        }
+    }
+
+    fn from_le(x: Self) -> Self {
+        #[cfg(target_endian = "little")]
+        {
+            x
+        }
+        #[cfg(not(target_endian = "little"))]
+        {
+            unsafe { transmute((x as {{ repr }}).swap_bytes()) }
+        }
+    }
+}
+  {%- endfor %}
 
   {%- for name, object in mod.objects.items() %}
 
 #[derive(Default, Debug)]
 pub struct {{ name }}Component {
     {%- for field in cfb.fields_sorted_by_offset(object) %}
-    pub {{ cfb.name_of(field) }}: {{ cfb.type_of(field) }},
+    pub {{ cfb.field_name(field) }}: {{ cfb.field_type(field) }},
     {%- endfor %}
 }
 
 impl {{ name }}Component {
     {%- for field in cfb.fields_sorted_by_offset(object) %}
-    const VT_{{ cfb.name_of(field) | upper }}: usize = {{ field.Offset() }};
-    const SIZE_{{ cfb.name_of(field) | upper }}: usize = {{ cfb.size_of(field) }};
-    const ALIGNMENT_{{ cfb.name_of(field) | upper }}: usize = {{ cfb.alignment_of(field) }};
+    const VT_{{ cfb.field_name(field) | upper }}: usize = {{ field.Offset() }};
+    const SIZE_{{ cfb.field_name(field) | upper }}: usize = {{ cfb.field_size(field) }};
+    const ALIGNMENT_{{ cfb.field_name(field) | upper }}: usize = {{ cfb.field_alignment(field) }};
     {%- endfor %}
-    const MAX_ALIGNMENT: usize = {{ cfb.max_alignment_of(object) }};
+    const ALIGNMENT: usize = {{ cfb.table_alignment(object) }};
 }
 
 impl<'c> Component<'c> for {{ name }}Component {
@@ -25,22 +74,22 @@ impl<'c> Component<'c> for {{ name }}Component {
         let vtable_start = {
             let mut vtable = builder.start_vtable();
             {%- for field in cfb.fields_sorted_by_alignement(object): %}
-            if {{ cfb.if_not_default(field) }} {
-                vtable.add_field(Self::VT_{{ cfb.name_of(field) | upper }}, Self::SIZE_{{ cfb.name_of(field) | upper }}, Self::ALIGNMENT_{{ cfb.name_of(field) | upper }});
+            if {{ cfb.field_present(field) }} {
+                vtable.add_field(Self::VT_{{ cfb.field_name(field) | upper }}, Self::SIZE_{{ cfb.field_name(field) | upper }}, Self::ALIGNMENT_{{ cfb.field_name(field) | upper }});
             }
             {%- endfor %}
             vtable.finish()
         };
 
-        builder.align_after(SIZE_OF_SOFFSET, Self::MAX_ALIGNMENT);
+        builder.align_after(SIZE_OF_SOFFSET, Self::ALIGNMENT);
 
         let table_start = builder.tell();
         builder.push_scalar((table_start - vtable_start) as SOffset);
 
         {%- for field in cfb.fields_sorted_by_alignement(object): %}
-        if {{ cfb.if_not_default(field) }} {
-            builder.align(Self::ALIGNMENT_{{ cfb.name_of(field) | upper }});
-            builder.push_scalar(self.{{ cfb.name_of(field) }});
+        if {{ cfb.field_present(field) }} {
+            builder.align(Self::ALIGNMENT_{{ cfb.field_name(field) | upper }});
+            builder.push_scalar(self.{{ cfb.field_name(field) }});
         }
         {%- endfor %}
 
@@ -48,7 +97,7 @@ impl<'c> Component<'c> for {{ name }}Component {
     }
 }
   {%- endfor %}
-{% endif -%}
+{%- endif -%}
 
 {% for name, mod in mod.children.items() -%}
 {% set mod_content %}

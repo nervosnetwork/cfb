@@ -15,31 +15,31 @@ pub mod example {
         const VT_Y: usize = 6;
         const SIZE_Y: usize = 8;
         const ALIGNMENT_Y: usize = 8;
-        const MAX_ALIGNMENT: usize = 8;
+        const ALIGNMENT: usize = 8;
     }
 
     impl<'c> Component<'c> for PointComponent {
         fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();
-                if self.x != 0 {
+                if self.x != 0u64 {
                     vtable.add_field(Self::VT_X, Self::SIZE_X, Self::ALIGNMENT_X);
                 }
-                if self.y != 0 {
+                if self.y != 0u64 {
                     vtable.add_field(Self::VT_Y, Self::SIZE_Y, Self::ALIGNMENT_Y);
                 }
                 vtable.finish()
             };
 
-            builder.align_after(SIZE_OF_SOFFSET, Self::MAX_ALIGNMENT);
+            builder.align_after(SIZE_OF_SOFFSET, Self::ALIGNMENT);
 
             let table_start = builder.tell();
             builder.push_scalar((table_start - vtable_start) as SOffset);
-            if self.x != 0 {
+            if self.x != 0u64 {
                 builder.align(Self::ALIGNMENT_X);
                 builder.push_scalar(self.x);
             }
-            if self.y != 0 {
+            if self.y != 0u64 {
                 builder.align(Self::ALIGNMENT_Y);
                 builder.push_scalar(self.y);
             }
@@ -47,5 +47,4 @@ pub mod example {
             table_start
         }
     }
-
 }

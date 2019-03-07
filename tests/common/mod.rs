@@ -1,4 +1,9 @@
 #[rustfmt::skip]
+pub mod enum_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod enum_generated;
+#[rustfmt::skip]
 pub mod scalars_with_different_size_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
