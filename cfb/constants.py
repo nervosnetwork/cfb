@@ -16,6 +16,7 @@ BASE_TYPE_SIZE = dict([
     (BaseType.Double, 8),
 
     (BaseType.String, 4),
+    (BaseType.Vector, 4),
 ])
 
 BASE_TYPE_RUST_TYPE = dict([

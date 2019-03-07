@@ -10,23 +10,23 @@ pub mod example {
     use std::mem::transmute;
 
     #[derive(Default, Debug)]
-    pub struct Author<'c> {
-        pub name: &'c str,
+    pub struct Sensor {
+        pub readings: Vec<u32>,
     }
 
-    impl<'c> Author<'c> {
-        const VT_NAME: usize = 4;
-        const SIZE_NAME: usize = 4;
-        const ALIGNMENT_NAME: usize = 4;
+    impl Sensor {
+        const VT_READINGS: usize = 4;
+        const SIZE_READINGS: usize = 4;
+        const ALIGNMENT_READINGS: usize = 4;
         const ALIGNMENT: usize = 4;
     }
 
-    impl<'c> Component<'c> for Author<'c> {
+    impl<'c> Component<'c> for Sensor {
         fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();
-                if !self.name.is_empty() {
-                    vtable.add_field(Self::VT_NAME, Self::SIZE_NAME, Self::ALIGNMENT_NAME);
+                if !self.readings.is_empty() {
+                    vtable.add_field(Self::VT_READINGS, Self::SIZE_READINGS, Self::ALIGNMENT_READINGS);
                 }
                 vtable.finish()
             };
@@ -35,13 +35,13 @@ pub mod example {
 
             let table_start = builder.tell();
             builder.push_scalar((table_start - vtable_start) as SOffset);
-            if !self.name.is_empty() {
-                builder.align(Self::ALIGNMENT_NAME);
+            if !self.readings.is_empty() {
+                builder.align(Self::ALIGNMENT_READINGS);
                 let offset_position = builder.tell();
-                builder.pad(Self::SIZE_NAME);
+                builder.pad(Self::SIZE_READINGS);
                 builder.push_component(DesignatedComponent::new(
                     offset_position,
-                    Box::new(StringComponent::new(self.name))
+                    Box::new(ScalarVectorComponent::new(self.readings, 4)),
                 ));
             }
 

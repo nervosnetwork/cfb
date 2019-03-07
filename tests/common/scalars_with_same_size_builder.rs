@@ -1,7 +1,9 @@
 pub mod example {
     #![allow(unused_imports)]
 
-    use cfb::builder::{Builder, Component};
+    use cfb::builder::{
+        Builder, Component, DesignatedComponent, ScalarVectorComponent, StringComponent,
+    };
     use cfb::scalar::Scalar;
     use cfb::types::{SOffset, SIZE_OF_SOFFSET};
     #[cfg(not(target_endian = "little"))]

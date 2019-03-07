@@ -222,42 +222,45 @@ impl<'c, T: AsRef<str>> Component<'c> for StringComponent<T> {
 }
 
 #[derive(Debug)]
-pub struct ScalarsVectorComponent<T> {
-    scalars: T,
-    len: usize,
+pub struct ScalarVectorComponent<T> {
+    scalars: Vec<T>,
+    alignment: usize,
 }
 
-impl<T> ScalarsVectorComponent<T> {
-    pub fn new(scalars: T, len: usize) -> Self {
-        ScalarsVectorComponent { scalars, len }
+impl<T> ScalarVectorComponent<T> {
+    pub fn new(scalars: Vec<T>, alignment: usize) -> Self {
+        ScalarVectorComponent { scalars, alignment }
     }
 }
 
-impl<'c, T: AsRef<[u8]>> Component<'c> for ScalarsVectorComponent<T> {
+impl<'c, T> Component<'c> for ScalarVectorComponent<T>
+where
+    T: Scalar,
+{
     fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
-        let bytes = self.scalars.as_ref();
-
-        let alignment = bytes.len() / self.len;
-        builder.align_after(SIZE_OF_LEN, alignment);
+        builder.align_after(SIZE_OF_LEN, self.alignment);
         let position = builder.tell();
 
-        builder.push_scalar(self.len as Len);
-        builder.extend_from_slice(bytes);
+        builder.push_scalar(self.scalars.len() as Len);
+        for s in self.scalars {
+            builder.align(self.alignment);
+            builder.push_scalar(s);
+        }
 
         position
     }
 }
 
 #[derive(Debug)]
-pub struct ReferencesVectorComponent<T>(T);
+pub struct ReferenceVectorComponent<T>(T);
 
-impl<T> ReferencesVectorComponent<T> {
+impl<T> ReferenceVectorComponent<T> {
     pub fn new(references: T) -> Self {
-        ReferencesVectorComponent(references)
+        ReferenceVectorComponent(references)
     }
 }
 
-impl<'c, T, I, C> Component<'c> for ReferencesVectorComponent<T>
+impl<'c, T, I, C> Component<'c> for ReferenceVectorComponent<T>
 where
     T: IntoIterator<Item = C, IntoIter = I>,
     I: ExactSizeIterator<Item = C> + DoubleEndedIterator<Item = C>,
@@ -362,30 +365,27 @@ mod tests {
     }
 
     #[test]
-    fn test_scalars_vector_component() {
-        let scalars: Vec<u8> = vec![1u32, 9]
-            .into_iter()
-            .map(|n| n.to_le_bytes().to_vec())
-            .flatten()
-            .collect();
-        let builder = Builder::new(ScalarsVectorComponent::new(scalars.clone(), 2));
+    fn test_scalar_vector_component() {
+        let scalars = vec![1u32, 9];
+        let builder = Builder::new(ScalarVectorComponent::new(scalars.clone(), 4));
         let buf = builder.build();
 
         let expect = [
             // root uoffset
-            &4u32.to_le_bytes(),
+            &4u32.to_le_bytes()[..],
             // len
             &2u32.to_le_bytes(),
             // content
-            &scalars[..],
+            &scalars[0].to_le_bytes(),
+            &scalars[1].to_le_bytes(),
         ]
         .concat();
         assert_eq!(expect, buf);
     }
 
     #[test]
-    fn test_references_vector_component() {
-        let builder = Builder::new(ReferencesVectorComponent::new(vec![
+    fn test_reference_vector_component() {
+        let builder = Builder::new(ReferenceVectorComponent::new(vec![
             StringComponent::new(String::from("s1")),
             StringComponent::new(String::from("s2")),
         ]));

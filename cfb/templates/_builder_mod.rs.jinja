@@ -1,7 +1,9 @@
 {%- if mod.has_definitions() -%}
 #![allow(unused_imports)]
 
-use cfb::builder::{Builder, Component, DesignatedComponent, StringComponent};
+use cfb::builder::{
+    Builder, Component, DesignatedComponent, ScalarVectorComponent, StringComponent,
+};
 use cfb::scalar::Scalar;
 use cfb::types::{SOffset, SIZE_OF_SOFFSET};
 #[cfg(not(target_endian = "little"))]
@@ -143,6 +145,15 @@ impl<'c> Component<'c> for {{ name }}{{ lifetime }} {
                 offset_position,
                 Box::new(StringComponent::new(self.{{ cfb.field_name(field) }}))
             ));
+          {%- elif cfb.is_vector(field) %}
+            {%- if cfb.is_element_scalar(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(ScalarVectorComponent::new(self.{{ cfb.field_name(field) }}, {{ cfb.element_aligment(field) }})),
+            ));
+            {%- endif %}
           {%- else %}
             builder.push_scalar(self.{{ cfb.field_name(field) }});
           {%- endif %}
