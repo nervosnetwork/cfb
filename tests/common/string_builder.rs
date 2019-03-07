@@ -10,18 +10,18 @@ pub mod example {
     use std::mem::transmute;
 
     #[derive(Default, Debug)]
-    pub struct Author<'c> {
-        pub name: &'c str,
+    pub struct Author {
+        pub name: String,
     }
 
-    impl<'c> Author<'c> {
+    impl Author {
         const VT_NAME: usize = 4;
         const SIZE_NAME: usize = 4;
         const ALIGNMENT_NAME: usize = 4;
         const ALIGNMENT: usize = 4;
     }
 
-    impl<'c> Component<'c> for Author<'c> {
+    impl<'c> Component<'c> for Author {
         fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();

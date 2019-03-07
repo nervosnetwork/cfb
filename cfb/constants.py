@@ -32,7 +32,7 @@ BASE_TYPE_RUST_TYPE = dict([
     (BaseType.Float, 'f32'),
     (BaseType.Double, 'f64'),
 
-    (BaseType.String, "&'c str"),
+    (BaseType.String, "String"),
 ])
 
 BASE_TYPE_DEFAULT = dict([

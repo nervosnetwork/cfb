@@ -110,14 +110,6 @@ class Context(object):
 
         return True
 
-    def lifetime(self, object):
-        for f in (object.Fields(i) for i in range(object.FieldsLength())):
-            base_type = f.Type().BaseType()
-            if base_type == BaseType.String:
-                return "<'c>"
-
-        return ''
-
     def struct_padded_fields(self, struct):
         return struct_padded_fields(self, struct)
 

@@ -100,16 +100,15 @@ impl Scalar for {{ name }} {
     }
 }
     {%- else %}
-      {%- set lifetime = cfb.lifetime(object) %}
 
 #[derive(Default, Debug)]
-pub struct {{ name }}{{ lifetime }} {
+pub struct {{ name }} {
     {%- for field in cfb.fields_sorted_by_offset(object) %}
     pub {{ cfb.field_name(field) }}: {{ cfb.field_type(field) }},
     {%- endfor %}
 }
 
-impl{{ lifetime }} {{ name }}{{ lifetime }} {
+impl {{ name }} {
     {%- for field in cfb.fields_sorted_by_offset(object) %}
     const VT_{{ cfb.field_name(field) | upper }}: usize = {{ field.Offset() }};
     const SIZE_{{ cfb.field_name(field) | upper }}: usize = {{ cfb.field_size(field) }};
@@ -118,7 +117,7 @@ impl{{ lifetime }} {{ name }}{{ lifetime }} {
     const ALIGNMENT: usize = {{ cfb.table_alignment(object) }};
 }
 
-impl<'c> Component<'c> for {{ name }}{{ lifetime }} {
+impl<'c> Component<'c> for {{ name }} {
     fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
         let vtable_start = {
             let mut vtable = builder.start_vtable();
