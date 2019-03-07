@@ -1,0 +1,5 @@
+namespace example;
+
+table Author {
+  name: string;
+}

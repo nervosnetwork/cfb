@@ -1,7 +1,7 @@
 {%- if mod.has_definitions() -%}
 #![allow(unused_imports)]
 
-use cfb::builder::{Builder, Component};
+use cfb::builder::{Builder, Component, DesignatedComponent, StringComponent};
 use cfb::scalar::Scalar;
 use cfb::types::{SOffset, SIZE_OF_SOFFSET};
 #[cfg(not(target_endian = "little"))]
@@ -98,15 +98,16 @@ impl Scalar for {{ name }} {
     }
 }
     {%- else %}
+      {%- set lifetime = cfb.lifetime(object) %}
 
 #[derive(Default, Debug)]
-pub struct {{ name }} {
+pub struct {{ name }}{{ lifetime }} {
     {%- for field in cfb.fields_sorted_by_offset(object) %}
     pub {{ cfb.field_name(field) }}: {{ cfb.field_type(field) }},
     {%- endfor %}
 }
 
-impl {{ name }} {
+impl{{ lifetime }} {{ name }}{{ lifetime }} {
     {%- for field in cfb.fields_sorted_by_offset(object) %}
     const VT_{{ cfb.field_name(field) | upper }}: usize = {{ field.Offset() }};
     const SIZE_{{ cfb.field_name(field) | upper }}: usize = {{ cfb.field_size(field) }};
@@ -115,7 +116,7 @@ impl {{ name }} {
     const ALIGNMENT: usize = {{ cfb.table_alignment(object) }};
 }
 
-impl<'c> Component<'c> for {{ name }} {
+impl<'c> Component<'c> for {{ name }}{{ lifetime }} {
     fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
         let vtable_start = {
             let mut vtable = builder.start_vtable();
@@ -135,7 +136,16 @@ impl<'c> Component<'c> for {{ name }} {
         {%- for field in cfb.fields_sorted_by_alignement(object): %}
         if {{ cfb.field_present(field) }} {
             builder.align(Self::ALIGNMENT_{{ cfb.field_name(field) | upper }});
+          {%- if cfb.is_string(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(StringComponent::new(self.{{ cfb.field_name(field) }}))
+            ));
+          {%- else %}
             builder.push_scalar(self.{{ cfb.field_name(field) }});
+          {%- endif %}
         }
         {%- endfor %}
 

@@ -14,6 +14,11 @@ pub mod scalars_with_same_size_builder;
 #[allow(clippy::all)]
 pub mod scalars_with_same_size_generated;
 #[rustfmt::skip]
+pub mod string_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod string_generated;
+#[rustfmt::skip]
 pub mod struct_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]

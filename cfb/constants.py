@@ -2,7 +2,7 @@ from cfb.reflection.BaseType import BaseType
 
 SIZE_OF_UOFFSET = 4
 
-SCALARS_SIZE = dict([
+BASE_TYPE_SIZE = dict([
     (BaseType.Bool, 1),
     (BaseType.Byte, 1),
     (BaseType.Short, 2),
@@ -14,9 +14,11 @@ SCALARS_SIZE = dict([
     (BaseType.ULong, 8),
     (BaseType.Float, 4),
     (BaseType.Double, 8),
+
+    (BaseType.String, 4),
 ])
 
-SCALARS_TYPE = dict([
+BASE_TYPE_RUST_TYPE = dict([
     (BaseType.Bool, 'bool'),
     (BaseType.Byte, 'i8'),
     (BaseType.Short, 'i16'),
@@ -28,9 +30,11 @@ SCALARS_TYPE = dict([
     (BaseType.ULong, 'u64'),
     (BaseType.Float, 'f32'),
     (BaseType.Double, 'f64'),
+
+    (BaseType.String, "&'c str"),
 ])
 
-SCALARS_DEFAULT = dict([
+BASE_TYPE_DEFAULT = dict([
     (BaseType.Bool, 'false'),
     (BaseType.Byte, '9i8'),
     (BaseType.Short, '0i16'),
@@ -43,5 +47,3 @@ SCALARS_DEFAULT = dict([
     (BaseType.Float, '0f32'),
     (BaseType.Double, '0f64'),
 ])
-
-
