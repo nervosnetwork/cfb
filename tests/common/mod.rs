@@ -1,4 +1,9 @@
 #[rustfmt::skip]
+pub mod string_vector_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod string_vector_generated;
+#[rustfmt::skip]
 pub mod enum_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]

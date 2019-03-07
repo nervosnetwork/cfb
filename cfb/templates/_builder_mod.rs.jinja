@@ -2,7 +2,8 @@
 #![allow(unused_imports)]
 
 use cfb::builder::{
-    Builder, Component, DesignatedComponent, ScalarVectorComponent, StringComponent,
+    Builder, Component, DesignatedComponent, ReferenceVectorComponent, ScalarVectorComponent,
+    StringComponent,
 };
 use cfb::scalar::Scalar;
 use cfb::types::{SOffset, SIZE_OF_SOFFSET};
@@ -151,6 +152,14 @@ impl<'c> Component<'c> for {{ name }} {
             builder.push_component(DesignatedComponent::new(
                 offset_position,
                 Box::new(ScalarVectorComponent::new(self.{{ cfb.field_name(field) }}, {{ cfb.element_aligment(field) }})),
+            ));
+            {%- elif cfb.is_element_string(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            let children = self.{{ cfb.field_name(field) }}.into_iter().map(StringComponent::new);
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(ReferenceVectorComponent::new(children)),
             ));
             {%- endif %}
           {%- else %}

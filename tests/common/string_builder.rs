@@ -2,7 +2,7 @@ pub mod example {
     #![allow(unused_imports)]
 
     use cfb::builder::{
-        Builder, Component, DesignatedComponent, ScalarVectorComponent, StringComponent,
+        Builder, Component, DesignatedComponent, ReferenceVectorComponent, ScalarVectorComponent, StringComponent,
     };
     use cfb::scalar::Scalar;
     use cfb::types::{SOffset, SIZE_OF_SOFFSET};

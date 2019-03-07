@@ -110,6 +110,9 @@ class Context(object):
 
         return True
 
+    def is_element_string(self, field):
+        return field.Type().Element() == BaseType.String
+
     def struct_padded_fields(self, struct):
         return struct_padded_fields(self, struct)
 
