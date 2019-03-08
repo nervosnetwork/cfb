@@ -4,6 +4,11 @@ pub mod enum_builder;
 #[allow(clippy::all)]
 pub mod enum_generated;
 #[rustfmt::skip]
+pub mod enum_vector_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod enum_vector_generated;
+#[rustfmt::skip]
 pub mod scalar_vector_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
