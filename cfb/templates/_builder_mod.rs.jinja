@@ -57,13 +57,13 @@ impl Scalar for {{ name }} {
       {%- set fields = cfb.struct_padded_fields(object) %}
 
 #[repr(C, align({{ object.Minalign() }}))]
-#[derive(Default, Clone, Copy, Debug, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct {{ name }} {
       {%- for f in fields %}
+    pub {{ cfb.field_name(f.field) }}: {{ cfb.field_type(f.field) }},
         {%- for padding in f.paddings %}
     pub padding{{ padding.index }}_: {{ padding.ty }},
         {%- endfor %}
-    pub {{ cfb.field_name(f.field) }}: {{ cfb.field_type(f.field) }},
       {%- endfor %}
 }
 

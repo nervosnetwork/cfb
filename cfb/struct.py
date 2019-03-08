@@ -46,14 +46,25 @@ def struct_padded_fields(ctx, object):
     padding_index = 0
     position = 0
 
+    last_field = None
     for raw_field in sorted((object.Fields(i) for i in range(object.FieldsLength())), key=lambda f: f.Offset()):
+        if last_field is not None:
+            alignment = ctx.field_alignment(raw_field)
+            padded = align(position, alignment)
+            paddings = generate_paddings(padding_index, padded - position)
+            fields.append(StructPaddedField(last_field, paddings))
+
+            padding_index += len(paddings)
+            position = padded + ctx.field_size(raw_field)
+        else:
+            position += ctx.field_size(raw_field)
+
+        last_field = raw_field
+
+    if last_field is not None:
         alignment = ctx.field_alignment(raw_field)
-        padded = align(position, alignment)
+        padded = align(position, object.Minalign())
         paddings = generate_paddings(padding_index, padded - position)
-
-        padding_index += len(paddings)
-        position = padded + ctx.field_size(raw_field)
-
-        fields.append(StructPaddedField(raw_field, paddings))
+        fields.append(StructPaddedField(last_field, paddings))
 
     return fields

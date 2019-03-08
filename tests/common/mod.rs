@@ -34,6 +34,11 @@ pub mod struct_builder;
 #[allow(clippy::all)]
 pub mod struct_generated;
 #[rustfmt::skip]
+pub mod struct_vector_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod struct_vector_generated;
+#[rustfmt::skip]
 pub mod table_field_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]

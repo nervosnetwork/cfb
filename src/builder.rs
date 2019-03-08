@@ -243,7 +243,8 @@ where
 
         builder.push_scalar(self.scalars.len() as Len);
         for s in self.scalars {
-            builder.align(self.alignment);
+            // Scalar MUST already aligned
+            debug_assert_eq!(builder.tell(), align(builder.tell(), self.alignment));
             builder.push_scalar(s);
         }
 

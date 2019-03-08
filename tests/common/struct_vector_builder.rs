@@ -11,23 +11,23 @@ pub mod example {
     use std::mem::transmute;
 
     #[derive(Default, Debug)]
-    pub struct Point {
-        pub position: Vec3,
+    pub struct Hero {
+        pub stats: Vec<Stat>,
     }
 
-    impl Point {
-        const VT_POSITION: usize = 4;
-        const SIZE_POSITION: usize = 24;
-        const ALIGNMENT_POSITION: usize = 8;
-        const ALIGNMENT: usize = 8;
+    impl Hero {
+        const VT_STATS: usize = 4;
+        const SIZE_STATS: usize = 4;
+        const ALIGNMENT_STATS: usize = 4;
+        const ALIGNMENT: usize = 4;
     }
 
-    impl<'c> Component<'c> for Point {
+    impl<'c> Component<'c> for Hero {
         fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();
-                if self.position.is_present() {
-                    vtable.add_field(Self::VT_POSITION, Self::SIZE_POSITION, Self::ALIGNMENT_POSITION);
+                if !self.stats.is_empty() {
+                    vtable.add_field(Self::VT_STATS, Self::SIZE_STATS, Self::ALIGNMENT_STATS);
                 }
                 vtable.finish()
             };
@@ -36,33 +36,36 @@ pub mod example {
 
             let table_start = builder.tell();
             builder.push_scalar((table_start - vtable_start) as SOffset);
-            if self.position.is_present() {
-                builder.align(Self::ALIGNMENT_POSITION);
-                builder.push_scalar(self.position);
+            if !self.stats.is_empty() {
+                builder.align(Self::ALIGNMENT_STATS);
+                let offset_position = builder.tell();
+                builder.pad(Self::SIZE_STATS);
+                builder.push_component(DesignatedComponent::new(
+                    offset_position,
+                    Box::new(ScalarVectorComponent::new(self.stats, 4)),
+                ));
             }
 
             table_start
         }
     }
 
-    #[repr(C, align(8))]
+    #[repr(C, align(4))]
     #[derive(Default, Clone, Debug, PartialEq)]
-    pub struct Vec3 {
-        pub x: u64,
-        pub y: u8,
+    pub struct Stat {
+        pub hp: u32,
+        pub mp: u8,
         pub padding0_: u8,
         pub padding1_: u16,
-        pub padding2_: u32,
-        pub z: u64,
     }
 
-    impl Vec3 {
+    impl Stat {
         pub fn is_present(&self) -> bool {
-            self.x != 0u64 || self.y != 0u8 || self.z != 0u64
+            self.hp != 0u32 || self.mp != 0u8
         }
     }
 
-    impl Scalar for Vec3 {
+    impl Scalar for Stat {
         #[cfg(target_endian = "little")]
         fn to_le(self) -> Self {
             self
@@ -75,17 +78,15 @@ pub mod example {
 
         #[cfg(not(target_endian = "little"))]
         fn to_le(mut self) -> Self {
-            self.x = self.x.to_le();
-            self.y = self.y.to_le();
-            self.z = self.z.to_le();
+            self.hp = self.hp.to_le();
+            self.mp = self.mp.to_le();
             self
         }
 
         #[cfg(not(target_endian = "little"))]
         fn from_le(mut x: Self) -> Self {
-            x.x = Scalar::from_le(x.x);
-            x.y = Scalar::from_le(x.y);
-            x.z = Scalar::from_le(x.z);
+            x.hp = Scalar::from_le(x.hp);
+            x.mp = Scalar::from_le(x.mp);
             x
         }
     }
