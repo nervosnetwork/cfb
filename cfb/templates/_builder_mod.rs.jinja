@@ -162,6 +162,13 @@ impl<'c> Component<'c> for {{ name }} {
                 Box::new(ReferenceVectorComponent::new(children)),
             ));
             {%- endif %}
+          {%- elif cfb.is_table(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(self.{{ cfb.field_name(field) }}.unwrap())
+            ));
           {%- else %}
             builder.push_scalar(self.{{ cfb.field_name(field) }});
           {%- endif %}

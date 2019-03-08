@@ -1,0 +1,39 @@
+{
+  "objects": [
+    {
+      "name": "example.Hero",
+      "fields": [
+        {
+          "name": "stat",
+          "type": {
+            "base_type": "Obj",
+            "index": 1
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "example.Stat",
+      "fields": [
+        {
+          "name": "hp",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

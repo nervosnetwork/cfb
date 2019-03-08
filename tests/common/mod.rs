@@ -1,9 +1,4 @@
 #[rustfmt::skip]
-pub mod string_vector_builder;
-#[rustfmt::skip]
-#[allow(clippy::all)]
-pub mod string_vector_generated;
-#[rustfmt::skip]
 pub mod enum_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
@@ -29,10 +24,20 @@ pub mod string_builder;
 #[allow(clippy::all)]
 pub mod string_generated;
 #[rustfmt::skip]
+pub mod string_vector_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod string_vector_generated;
+#[rustfmt::skip]
 pub mod struct_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 pub mod struct_generated;
+#[rustfmt::skip]
+pub mod table_field_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod table_field_generated;
 
 use flatbuffers::{Follow, Vector};
 

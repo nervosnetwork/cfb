@@ -24,7 +24,10 @@ class Context(object):
     def field_present(self, field):
         base_type = field.Type().BaseType()
         if base_type == BaseType.Obj:
-            return 'self.{0}.is_present()'.format(self.field_name(field))
+            obj = self.schema.Objects(field.Type().Index())
+            if obj.IsStruct():
+                return 'self.{0}.is_present()'.format(self.field_name(field))
+            return 'self.{0}.is_some()'.format(self.field_name(field))
         if base_type == BaseType.Bool:
             return 'self.{0}'.format(self.field_name(field))
         if base_type == BaseType.String or base_type == BaseType.Vector:
@@ -41,11 +44,15 @@ class Context(object):
                 return "Vec<{0}>".format(self.rust_type(field.Type().Element()))
 
             return self.rust_type(base_type)
-        else:
-            if base_type == BaseType.Obj:
-                return self.base_name(self.schema.Objects(index))
-            else:
-                return self.base_name(self.schema.Enums(index))
+
+        if base_type == BaseType.Obj:
+            obj = self.schema.Objects(index)
+            if obj.IsStruct():
+                return self.base_name(obj)
+
+            return 'Option<{0}>'.format(self.base_name(obj))
+
+        return self.base_name(self.schema.Enums(index))
 
     def rust_type(self, cfb_type):
         return BASE_TYPE_RUST_TYPE[cfb_type]
@@ -94,6 +101,9 @@ class Context(object):
 
     def field_name(self, field):
         return field.Name().decode('utf-8')
+
+    def is_table(self, field):
+        return field.Type().BaseType() == BaseType.Obj and not self.schema.Objects(field.Type().Index()).IsStruct()
 
     def is_string(self, field):
         return field.Type().BaseType() == BaseType.String
