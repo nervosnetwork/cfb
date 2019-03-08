@@ -38,6 +38,11 @@ pub mod table_field_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 pub mod table_field_generated;
+#[rustfmt::skip]
+pub mod table_vector_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod table_vector_generated;
 
 use flatbuffers::{Follow, Vector};
 

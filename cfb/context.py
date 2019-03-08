@@ -39,11 +39,15 @@ class Context(object):
         index = field.Type().Index()
         base_type = field.Type().BaseType()
 
-        if index == -1:
-            if base_type == BaseType.Vector:
+        if base_type == BaseType.Vector:
+            if index == -1:
                 return "Vec<{0}>".format(self.rust_type(field.Type().Element()))
 
-            return self.rust_type(base_type)
+            if field.Type().Element() == BaseType.Obj:
+                obj = self.schema.Objects(index)
+                return "Vec<{0}>".format(self.base_name(obj))
+            enum = self.schema.Enums(index)
+            return "Vec<{0}>".format(self.base_name(enum))
 
         if base_type == BaseType.Obj:
             obj = self.schema.Objects(index)
@@ -51,6 +55,9 @@ class Context(object):
                 return self.base_name(obj)
 
             return 'Option<{0}>'.format(self.base_name(obj))
+
+        if index == -1:
+            return self.rust_type(base_type)
 
         return self.base_name(self.schema.Enums(index))
 
@@ -116,12 +123,19 @@ class Context(object):
         if element == BaseType.Vector or element == BaseType.String or element == BaseType.Union:
             return False
         if element == BaseType.Obj:
-            return self.schema.Objects(ty.Index()).IsStruct()
+            return self.schema.Objects(field.Type().Index()).IsStruct()
 
         return True
 
     def is_element_string(self, field):
         return field.Type().Element() == BaseType.String
+
+    def is_element_table(self, field):
+        if field.Type().Element() != BaseType.Obj:
+            return False
+
+        obj = self.schema.Objects(field.Type().Index())
+        return not obj.IsStruct()
 
     def struct_padded_fields(self, struct):
         return struct_padded_fields(self, struct)
