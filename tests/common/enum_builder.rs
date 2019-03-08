@@ -48,7 +48,7 @@ pub mod example {
         }
     }
 
-    #[derive(Default, Debug)]
+    #[derive(Default, Clone, Debug, PartialEq)]
     pub struct Bag {
         pub color: Color,
     }

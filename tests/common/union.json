@@ -1,0 +1,117 @@
+{
+  "objects": [
+    {
+      "name": "example.Hero",
+      "fields": [
+        {
+          "name": "hp",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "example.Monster",
+      "fields": [
+        {
+          "name": "hp",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "example.Player",
+      "fields": [
+        {
+          "name": "role",
+          "type": {
+            "base_type": "Union",
+            "index": 0
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "role_type",
+          "type": {
+            "base_type": "UType",
+            "index": 0
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+    {
+      "name": "example.Role",
+      "values": [
+        {
+          "name": "NONE",
+          "union_type": {
+          }
+        },
+        {
+          "name": "Hero",
+          "value": 1,
+          "object": {
+            "name": "example.Hero",
+            "fields": [
+              {
+                "name": "hp",
+                "type": {
+                  "base_type": "UInt"
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 0
+          }
+        },
+        {
+          "name": "Monster",
+          "value": 2,
+          "object": {
+            "name": "example.Monster",
+            "fields": [
+              {
+                "name": "hp",
+                "type": {
+                  "base_type": "UInt"
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 1
+          }
+        }
+      ],
+      "is_union": true,
+      "underlying_type": {
+        "base_type": "UType",
+        "index": 0
+      }
+    }
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

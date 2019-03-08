@@ -21,5 +21,6 @@ class Generator(object):
         )
 
         builder = env.get_template('builder.rs.jinja')
+        builder_content = builder.render(cfb=self.context)
         with open(path.join(outdir, self.basename + '_builder.rs'), 'w') as out_file:
-            out_file.write(builder.render(cfb=self.context))
+            out_file.write(builder_content)

@@ -1,0 +1,15 @@
+namespace example;
+
+table Hero {
+  hp: uint32;
+}
+
+table Monster {
+  hp: uint32;
+}
+
+union Role { Hero, Monster }
+
+table Player {
+  role: Role;
+}

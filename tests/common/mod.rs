@@ -53,6 +53,11 @@ pub mod table_vector_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 pub mod table_vector_generated;
+#[rustfmt::skip]
+pub mod union_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod union_generated;
 
 use flatbuffers::{Follow, Vector};
 

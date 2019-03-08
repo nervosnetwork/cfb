@@ -10,7 +10,7 @@ pub mod example {
     #[cfg(not(target_endian = "little"))]
     use std::mem::transmute;
 
-    #[derive(Default, Debug)]
+    #[derive(Default, Clone, Debug, PartialEq)]
     pub struct Hero {
         pub stat: Option<Stat>,
     }
@@ -36,13 +36,13 @@ pub mod example {
 
             let table_start = builder.tell();
             builder.push_scalar((table_start - vtable_start) as SOffset);
-            if self.stat.is_some() {
+            if let Some(f) = self.stat {
                 builder.align(Self::ALIGNMENT_STAT);
                 let offset_position = builder.tell();
                 builder.pad(Self::SIZE_STAT);
                 builder.push_component(DesignatedComponent::new(
                     offset_position,
-                    Box::new(self.stat.unwrap())
+                    Box::new(f),
                 ));
             }
 
@@ -50,7 +50,7 @@ pub mod example {
         }
     }
 
-    #[derive(Default, Debug)]
+    #[derive(Default, Clone, Debug, PartialEq)]
     pub struct Stat {
         pub hp: u32,
     }

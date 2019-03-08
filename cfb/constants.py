@@ -3,6 +3,8 @@ from cfb.reflection.BaseType import BaseType
 SIZE_OF_UOFFSET = 4
 
 BASE_TYPE_SIZE = dict([
+    (BaseType.UType, 1),
+
     (BaseType.Bool, 1),
     (BaseType.Byte, 1),
     (BaseType.Short, 2),
@@ -17,9 +19,11 @@ BASE_TYPE_SIZE = dict([
 
     (BaseType.String, 4),
     (BaseType.Vector, 4),
+    (BaseType.Union, 4),
 ])
 
 BASE_TYPE_RUST_TYPE = dict([
+    (BaseType.UType, 'u8'),
     (BaseType.Bool, 'bool'),
     (BaseType.Byte, 'i8'),
     (BaseType.Short, 'i16'),

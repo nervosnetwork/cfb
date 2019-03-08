@@ -10,7 +10,7 @@ pub mod example {
     #[cfg(not(target_endian = "little"))]
     use std::mem::transmute;
 
-    #[derive(Default, Debug)]
+    #[derive(Default, Clone, Debug, PartialEq)]
     pub struct Point {
         pub x: u64,
         pub y: u64,
