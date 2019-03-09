@@ -1,0 +1,157 @@
+{
+  "objects": [
+    {
+      "name": "T1",
+      "fields": [
+        {
+          "name": "f1",
+          "type": {
+            "base_type": "ULong"
+          },
+          "offset": 4
+        },
+        {
+          "name": "f2",
+          "type": {
+            "base_type": "Obj",
+            "index": 1
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "f3",
+          "type": {
+            "base_type": "Vector",
+            "element": "ULong"
+          },
+          "id": 4,
+          "offset": 12
+        },
+        {
+          "name": "f4",
+          "type": {
+            "base_type": "String"
+          },
+          "id": 6,
+          "offset": 16
+        },
+        {
+          "name": "s1",
+          "type": {
+            "base_type": "Vector",
+            "element": "UByte"
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "s2",
+          "type": {
+            "base_type": "Vector",
+            "element": "UByte"
+          },
+          "id": 3,
+          "offset": 10
+        },
+        {
+          "name": "s3",
+          "type": {
+            "base_type": "Vector",
+            "element": "UByte"
+          },
+          "id": 5,
+          "offset": 14
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "T2",
+      "fields": [
+        {
+          "name": "f1",
+          "type": {
+            "base_type": "UByte"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "root_table": {
+    "name": "T1",
+    "fields": [
+      {
+        "name": "f1",
+        "type": {
+          "base_type": "ULong"
+        },
+        "offset": 4
+      },
+      {
+        "name": "f2",
+        "type": {
+          "base_type": "Obj",
+          "index": 1
+        },
+        "id": 2,
+        "offset": 8
+      },
+      {
+        "name": "f3",
+        "type": {
+          "base_type": "Vector",
+          "element": "ULong"
+        },
+        "id": 4,
+        "offset": 12
+      },
+      {
+        "name": "f4",
+        "type": {
+          "base_type": "String"
+        },
+        "id": 6,
+        "offset": 16
+      },
+      {
+        "name": "s1",
+        "type": {
+          "base_type": "Vector",
+          "element": "UByte"
+        },
+        "id": 1,
+        "offset": 6
+      },
+      {
+        "name": "s2",
+        "type": {
+          "base_type": "Vector",
+          "element": "UByte"
+        },
+        "id": 3,
+        "offset": 10
+      },
+      {
+        "name": "s3",
+        "type": {
+          "base_type": "Vector",
+          "element": "UByte"
+        },
+        "id": 5,
+        "offset": 14
+      }
+    ],
+    "minalign": 1
+  },
+  "services": [
+
+  ]
+}

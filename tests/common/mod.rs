@@ -1,4 +1,8 @@
 #[rustfmt::skip]
+pub mod data_alignment_builder;
+#[rustfmt::skip]
+pub mod data_order_builder;
+#[rustfmt::skip]
 pub mod enum_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
@@ -48,6 +52,8 @@ pub mod table_field_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 pub mod table_field_generated;
+#[rustfmt::skip]
+pub mod table_fields_order_builder;
 #[rustfmt::skip]
 pub mod table_vector_builder;
 #[rustfmt::skip]
