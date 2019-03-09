@@ -11,13 +11,27 @@ env:
 
 matrix:
   include:
-    - language: rust
+    - name: Rust
+      language: rust
       rust: '1.33.0'
       install:
         - cargo fmt --version || rustup component add rustfmt-preview
         - cargo clippy --version || rustup component add clippy-preview
-      script: make ci-rust
-    - language: python
+      script:
+        - make ci-rust
+    - name: Rust (Big-endian)
+      language: rust
+      services: docker
+      rust: '1.33.0'
+      install:
+        - cargo fmt --version || rustup component add rustfmt-preview
+        - cargo clippy --version || rustup component add clippy-preview
+        - rustup target add mips64-unknown-linux-gnuabi64
+        - cross --version || cargo install cross --force
+      script:
+        - cross test --verbose
+    - name: Python
+      language: python
       python: '3.7'
       install:
         - pip install pipenv

@@ -11,12 +11,13 @@ TEMPLATES := $(wildcard cfb/templates/*.jinja)
 ifeq (${VIRTUAL_ENV},)
   PIPENV_RUN := pipenv run
 endif
+VERBOSE := $(if ${CI},--verbose,)
 
 test: test-python test-rust
 test-python:
 	${PIPENV_RUN} python -m unittest discover
 test-rust:
-	cargo test
+	cargo test ${VERBOSE}
 
 gen: ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
 gen-clean:
