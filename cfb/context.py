@@ -172,12 +172,10 @@ class Context(object):
                            key=lambda v: v.Value()))
 
     def fields_sorted_by_alignement(self, object):
-        return list(sorted((object.Fields(i) for i in range(object.FieldsLength())),
-                           key=lambda f: (self.field_alignment(f),
-                                          self.field_size(f)),
-                           reverse=True))
+        fields = sorted((object.Fields(i) for i in range(
+            object.FieldsLength())), key=lambda f: f.Offset())
+
+        return list(sorted(fields, key=lambda f: (self.field_alignment(f), self.field_size(f)), reverse=True))
 
     def fields_sorted_by_offset(self, object):
-        return list(sorted((object.Fields(i) for i in range(object.FieldsLength())),
-                           key=lambda f: f.Offset(),
-                           ))
+        return list(sorted((object.Fields(i) for i in range(object.FieldsLength())), key=lambda f: f.Offset()))
