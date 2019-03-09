@@ -39,6 +39,5 @@ matrix:
       script:
         - make ci-python
 
-
 before_cache:
 - rm -rf $HOME/.cargo/registry

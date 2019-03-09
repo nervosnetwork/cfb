@@ -61,13 +61,15 @@ ci: ci-rust ci-python
 ci-rust: fmt clippy test-rust
 	git diff --exit-code Cargo.lock
 
-ci-python: test-python ensure-gen
-
-ensure-gen: gen
+ci-gen-clean:
+	rm -f ${BUILDER}
+ci-gen: ${BUILDER}
 	git diff --exit-code tests/common
+
+ci-python: test-python ci-gen-clean ci-gen
 
 .PHONY: test test-python test-rust
 .PHONY: gen gen-clean gen-force
 .PHONY: doc doc-clean doc-publish
 .PHONY: fmt clippy
-.PHONY: ci ci-rust ci-python ensure-gen
+.PHONY: ci ci-rust ci-python ci-gen ci-gen-clean
