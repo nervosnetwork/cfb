@@ -47,6 +47,7 @@ impl<'c> DesignatedComponent<'c> {
 pub struct Builder<'c> {
     buffer: Vec<u8>,
     components: Vec<DesignatedComponent<'c>>,
+    new_components: Vec<DesignatedComponent<'c>>,
     vtables: HashMap<Vec<u8>, usize>,
 }
 
@@ -55,6 +56,7 @@ impl<'c> Builder<'c> {
         Builder {
             buffer: vec![0u8; SIZE_OF_UOFFSET],
             components: vec![DesignatedComponent::new(0, Box::new(root))],
+            new_components: Default::default(),
             vtables: Default::default(),
         }
     }
@@ -66,6 +68,7 @@ impl<'c> Builder<'c> {
         Builder {
             buffer,
             components: vec![DesignatedComponent::new(0, Box::new(root))],
+            new_components: Default::default(),
             vtables: Default::default(),
         }
     }
@@ -73,6 +76,9 @@ impl<'c> Builder<'c> {
     pub fn build(mut self) -> Vec<u8> {
         while let Some(component) = self.components.pop() {
             component.build(&mut self);
+            if !self.new_components.is_empty() {
+                self.components.extend(self.new_components.drain(..).rev());
+            }
         }
 
         self.buffer
@@ -88,7 +94,7 @@ impl<'c> Builder<'c> {
 
     pub fn push_component(&mut self, component: DesignatedComponent<'c>) {
         assert!(component.offset_position + 4 <= self.tell());
-        self.components.push(component);
+        self.new_components.push(component);
     }
 
     pub fn extend_from_slice(&mut self, bytes: &[u8]) -> &mut Self {
@@ -264,7 +270,7 @@ impl<T> ReferenceVectorComponent<T> {
 impl<'c, T, I, C> Component<'c> for ReferenceVectorComponent<T>
 where
     T: IntoIterator<Item = C, IntoIter = I>,
-    I: ExactSizeIterator<Item = C> + DoubleEndedIterator<Item = C>,
+    I: ExactSizeIterator<Item = C>,
     C: Component<'c> + 'c,
 {
     fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
@@ -274,16 +280,15 @@ where
         let iter = self.0.into_iter();
         let len = iter.len();
 
-        let mut current_offset_position =
-            position + SIZE_OF_LEN + len * SIZE_OF_UOFFSET - SIZE_OF_UOFFSET;
         builder.push_scalar(len as Len);
         builder.pad(len * SIZE_OF_UOFFSET);
-        for c in iter.rev() {
+        let mut current_offset_position = position + SIZE_OF_LEN;
+        for c in iter {
             builder.push_component(DesignatedComponent::new(
                 current_offset_position,
                 Box::new(c),
             ));
-            current_offset_position -= SIZE_OF_UOFFSET;
+            current_offset_position += SIZE_OF_UOFFSET;
         }
 
         position
