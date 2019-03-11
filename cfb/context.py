@@ -21,6 +21,14 @@ class Context(object):
             if val.Value() == 0:
                 return '{0}::{1}'.format(self.base_name(enum), val.Name().decode('utf-8'))
 
+    def field_nested_table(self, field):
+        if field.Type().BaseType() != BaseType.Vector or field.Type().Element() != BaseType.UByte:
+            return
+
+        for attr in (field.Attributes(i) for i in range(field.AttributesLength())):
+            if attr.Key() == b'cfb_nested_flatbuffer':
+                return attr.Value().decode('utf-8')
+
     def field_present(self, field, extract=None):
         base_type = field.Type().BaseType()
         if base_type == BaseType.Obj:
@@ -34,8 +42,15 @@ class Context(object):
 
         if base_type == BaseType.Bool:
             return 'self.{0}'.format(self.field_name(field))
-        if base_type == BaseType.String or base_type == BaseType.Vector:
+        if base_type == BaseType.String:
             return '!self.{0}.is_empty()'.format(self.field_name(field))
+        if base_type == BaseType.Vector:
+            nested = self.field_nested_table(field)
+            if nested is None:
+                return '!self.{0}.is_empty()'.format(self.field_name(field))
+            if extract is None:
+                return 'self.{0}.is_some()'.format(self.field_name(field))
+            return 'let Some({0}) = self.{1}'.format(extract, self.field_name(field))
 
         if base_type == BaseType.Union:
             if extract is None:
@@ -54,7 +69,10 @@ class Context(object):
 
         if base_type == BaseType.Vector:
             if index == -1:
-                return "Vec<{0}>".format(self.rust_type(field.Type().Element()))
+                nested = self.field_nested_table(field)
+                if nested is None:
+                    return "Vec<{0}>".format(self.rust_type(field.Type().Element()))
+                return "Option<{0}>".format(nested)
 
             if field.Type().Element() == BaseType.Obj:
                 obj = self.schema.Objects(index)

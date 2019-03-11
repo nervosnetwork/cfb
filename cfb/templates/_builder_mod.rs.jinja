@@ -2,8 +2,8 @@
 #![allow(unused_imports)]
 
 use cfb::builder::{
-    Builder, Component, DesignatedComponent, ReferenceVectorComponent, ScalarVectorComponent,
-    StringComponent,
+    Builder, Component, DesignatedComponent, NestedBufferComponent, ReferenceVectorComponent,
+    ScalarVectorComponent, StringComponent,
 };
 use cfb::scalar::Scalar;
 use cfb::types::{SOffset, SIZE_OF_SOFFSET};
@@ -176,12 +176,20 @@ impl<'c> Component<'c> for {{ name }} {
             ));
           {%- elif cfb.is_vector(field) %}
             {%- if cfb.is_element_scalar(field) %}
+              {%- set nested_table = cfb.field_nested_table(field) %}
             let offset_position = builder.tell();
             builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+              {%- if nested_table is none %}
             builder.push_component(DesignatedComponent::new(
                 offset_position,
                 Box::new(ScalarVectorComponent::new(self.{{ cfb.field_name(field) }}, {{ cfb.element_aligment(field) }})),
             ));
+              {%- else %}
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(NestedBufferComponent::new(f)),
+            ));
+              {%- endif %}
             {%- elif cfb.is_element_string(field) %}
             let offset_position = builder.tell();
             builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});

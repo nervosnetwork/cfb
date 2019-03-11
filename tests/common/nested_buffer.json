@@ -1,0 +1,45 @@
+{
+  "objects": [
+    {
+      "name": "Block",
+      "fields": [
+        {
+          "name": "header",
+          "type": {
+            "base_type": "Vector",
+            "element": "UByte"
+          },
+          "offset": 4,
+          "attributes": [
+            {
+              "key": "cfb_nested_flatbuffer",
+              "value": "Header"
+            }
+          ]
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Header",
+      "fields": [
+        {
+          "name": "number",
+          "type": {
+            "base_type": "ULong"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

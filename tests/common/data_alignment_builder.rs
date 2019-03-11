@@ -1,8 +1,8 @@
 #![allow(unused_imports)]
 
 use cfb::builder::{
-    Builder, Component, DesignatedComponent, ReferenceVectorComponent, ScalarVectorComponent,
-    StringComponent,
+    Builder, Component, DesignatedComponent, NestedBufferComponent, ReferenceVectorComponent,
+    ScalarVectorComponent, StringComponent,
 };
 use cfb::scalar::Scalar;
 use cfb::types::{SOffset, SIZE_OF_SOFFSET};

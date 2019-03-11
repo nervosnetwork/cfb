@@ -13,6 +13,11 @@ pub mod enum_vector_builder;
 #[allow(clippy::all)]
 pub mod enum_vector_generated;
 #[rustfmt::skip]
+pub mod nested_buffer_builder;
+#[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod nested_buffer_generated;
+#[rustfmt::skip]
 pub mod scalar_vector_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
