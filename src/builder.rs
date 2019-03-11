@@ -4,6 +4,7 @@ use crate::types::{
     Len, UOffset, VOffset, SIZE_OF_LEN, SIZE_OF_SOFFSET, SIZE_OF_UOFFSET, SIZE_OF_VOFFSET,
 };
 use std::collections::HashMap;
+use std::mem;
 
 pub trait Component<'c> {
     /// Build the component and return the start position of the component in the buffer.
@@ -56,6 +57,18 @@ impl<'c> Builder<'c> {
         Builder {
             buffer: vec![0u8; SIZE_OF_UOFFSET],
             components: vec![DesignatedComponent::new(0, Box::new(root))],
+            new_components: Default::default(),
+            vtables: Default::default(),
+        }
+    }
+
+    fn with_buffer<C: Component<'c> + 'c>(mut buffer: Vec<u8>, root: C) -> Builder<'c> {
+        debug_assert_eq!(buffer.len(), align(buffer.len(), SIZE_OF_UOFFSET));
+        let offset_position = buffer.len();
+        buffer.resize(offset_position + SIZE_OF_UOFFSET, 0);
+        Builder {
+            buffer,
+            components: vec![DesignatedComponent::new(offset_position, Box::new(root))],
             new_components: Default::default(),
             vtables: Default::default(),
         }
@@ -295,6 +308,37 @@ where
     }
 }
 
+#[derive(Debug)]
+pub struct NestedBufferComponent<T>(T);
+
+impl<T> NestedBufferComponent<T> {
+    const NESTED_BUFFER_ALIGNMENT: usize = 8;
+
+    pub fn new(root: T) -> Self {
+        NestedBufferComponent(root)
+    }
+}
+
+impl<'c, T> Component<'c> for NestedBufferComponent<T>
+where
+    T: Component<'c> + 'c,
+{
+    fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
+        builder.align_after(SIZE_OF_LEN, Self::NESTED_BUFFER_ALIGNMENT);
+        let len_position = builder.tell();
+        builder.pad(SIZE_OF_LEN);
+
+        let buffer = mem::replace(&mut builder.buffer, Vec::new());
+        let nested_builder = Builder::with_buffer(buffer, self.0);
+        let nested_buffer = nested_builder.build();
+        let len = nested_buffer.len() - len_position - SIZE_OF_LEN;
+        mem::replace(&mut builder.buffer, nested_buffer);
+        builder.set_scalar(len_position, len as Len);
+
+        len_position
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -503,5 +547,29 @@ mod tests {
             .concat();
             assert_eq!(expect, &builder.as_bytes()[4..14]);
         }
+    }
+
+    #[test]
+    fn test_nested_buffer() {
+        let s = String::from("String");
+        let builder = Builder::new(NestedBufferComponent::new(StringComponent::new(s.clone())));
+        let buf = builder.build();
+
+        let expect = [
+            // root uoffset
+            &4u32.to_le_bytes()[..],
+            // nested buffer len
+            &15u32.to_le_bytes(),
+            // nested root uoffset
+            &4u32.to_le_bytes(),
+            // len
+            &((s.len() as u32).to_le_bytes()),
+            // content
+            s.as_bytes(),
+            // null-terminated
+            &[0u8],
+        ]
+        .concat();
+        assert_eq!(expect, buf);
     }
 }
