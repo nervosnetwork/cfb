@@ -1,0 +1,49 @@
+{
+  "objects": [
+    {
+      "name": "example.Hero",
+      "fields": [
+        {
+          "name": "stats",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 1
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "example.Stat",
+      "fields": [
+        {
+          "name": "hp",
+          "type": {
+            "base_type": "UInt"
+          }
+        },
+        {
+          "name": "mp",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 1,
+          "offset": 4
+        }
+      ],
+      "is_struct": true,
+      "minalign": 4,
+      "bytesize": 8
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

@@ -1,0 +1,9 @@
+attribute "cfb_nested_flatbuffer";
+
+table Header {
+    number: uint64;
+}
+
+table Block {
+    header: [ubyte] (cfb_nested_flatbuffer: "Header");
+}

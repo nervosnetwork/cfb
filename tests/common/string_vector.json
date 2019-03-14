@@ -1,0 +1,26 @@
+{
+  "objects": [
+    {
+      "name": "example.Text",
+      "fields": [
+        {
+          "name": "lines",
+          "type": {
+            "base_type": "Vector",
+            "element": "String"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

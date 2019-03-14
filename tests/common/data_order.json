@@ -1,0 +1,110 @@
+{
+  "objects": [
+    {
+      "name": "Item",
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "base_type": "String"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Monster",
+      "fields": [
+        {
+          "name": "loots",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 0
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "name",
+          "type": {
+            "base_type": "String"
+          },
+          "offset": 4
+        },
+        {
+          "name": "stat",
+          "type": {
+            "base_type": "Obj",
+            "index": 2
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Stat",
+      "fields": [
+        {
+          "name": "hp",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        },
+        {
+          "name": "mp",
+          "type": {
+            "base_type": "UInt"
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "root_table": {
+    "name": "Monster",
+    "fields": [
+      {
+        "name": "loots",
+        "type": {
+          "base_type": "Vector",
+          "element": "Obj",
+          "index": 0
+        },
+        "id": 2,
+        "offset": 8
+      },
+      {
+        "name": "name",
+        "type": {
+          "base_type": "String"
+        },
+        "offset": 4
+      },
+      {
+        "name": "stat",
+        "type": {
+          "base_type": "Obj",
+          "index": 2
+        },
+        "id": 1,
+        "offset": 6
+      }
+    ],
+    "minalign": 1
+  },
+  "services": [
+
+  ]
+}

@@ -1,0 +1,250 @@
+{%- if mod.has_definitions() -%}
+#![allow(unused_imports)]
+
+use cfb::builder::{
+    Builder, Component, DesignatedComponent, NestedBufferComponent, ReferenceVectorComponent,
+    ScalarVectorComponent, StringComponent,
+};
+use cfb::scalar::Scalar;
+use cfb::types::{SOffset, SIZE_OF_SOFFSET};
+#[cfg(not(target_endian = "little"))]
+use std::mem::transmute;
+
+  {%- for name, enum in mod.enums.items() %}
+    {%- if enum.IsUnion() %}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum {{ name }} {
+      {%- for val in cfb.enum_values(enum) %}
+        {%- if val.Value() != 0 %}
+    {{ val.Name().decode('utf-8') }}({{ val.Name().decode('utf-8') }}),
+        {%- endif %}
+      {%- endfor %}
+}
+
+impl {{ name }} {
+    pub fn union_type(&self) -> u8 {
+        match self {
+      {%- for val in cfb.enum_values(enum) %}
+        {%- if val.Value() != 0 %}
+            {{ name }}::{{ val.Name().decode('utf-8') }}(_) => {{ val.Value() }},
+        {%- endif %}
+      {%- endfor %}
+        }
+    }
+}
+    {%- else %}
+      {%- set repr = cfb.rust_type(enum.UnderlyingType().BaseType()) %}
+
+#[repr({{ repr }})]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum {{ name }} {
+      {%- for val in cfb.enum_values(enum) %}
+    {{ val.Name().decode('utf-8') }} = {{ val.Value() }},
+      {%- endfor %}
+}
+
+impl Default for {{ name }} {
+    fn default() -> Self {
+        {{ cfb.enum_default(enum) }}
+    }
+}
+
+impl Scalar for {{ name }} {
+    fn to_le(self) -> Self {
+        #[cfg(target_endian = "little")]
+        {
+            self
+        }
+        #[cfg(not(target_endian = "little"))]
+        {
+            unsafe { transmute((self as {{ repr }}).swap_bytes()) }
+        }
+    }
+
+    fn from_le(x: Self) -> Self {
+        #[cfg(target_endian = "little")]
+        {
+            x
+        }
+        #[cfg(not(target_endian = "little"))]
+        {
+            unsafe { transmute((x as {{ repr }}).swap_bytes()) }
+        }
+    }
+}
+    {%- endif %}
+  {%- endfor %}
+
+  {%- for name, object in mod.objects.items() %}
+    {%- if object.IsStruct() %}
+      {%- set fields = cfb.struct_padded_fields(object) %}
+
+#[repr(C, align({{ object.Minalign() }}))]
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct {{ name }} {
+      {%- for f in fields %}
+    pub {{ cfb.field_name(f.field) }}: {{ cfb.field_type(f.field) }},
+        {%- for padding in f.paddings %}
+    pub padding{{ padding.index }}_: {{ padding.ty }},
+        {%- endfor %}
+      {%- endfor %}
+}
+
+impl {{ name }} {
+    pub fn is_present(&self) -> bool {
+        {% for f in fields %}{% if not loop.first %} || {% endif %}{{ cfb.field_present(f.field) }}{% endfor %}
+    }
+}
+
+impl Scalar for {{ name }} {
+    #[cfg(target_endian = "little")]
+    fn to_le(self) -> Self {
+        self
+    }
+
+    #[cfg(target_endian = "little")]
+    fn from_le(x: Self) -> Self {
+        x
+    }
+
+    #[cfg(not(target_endian = "little"))]
+    fn to_le(mut self) -> Self {
+      {%- for f in fields %}
+        self.{{ cfb.field_name(f.field) }} = self.{{ cfb.field_name(f.field) }}.to_le();
+      {%- endfor %}
+        self
+    }
+
+    #[cfg(not(target_endian = "little"))]
+    fn from_le(mut x: Self) -> Self {
+      {%- for f in fields %}
+        x.{{ cfb.field_name(f.field) }} = Scalar::from_le(x.{{ cfb.field_name(f.field) }});
+      {%- endfor %}
+        x
+    }
+}
+    {%- else %}
+
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct {{ name }} {
+    {%- for field in cfb.fields_sorted_by_offset(object) %}
+      {%- if not cfb.is_union_type(field) %}
+    pub {{ cfb.field_name(field) }}: {{ cfb.field_type(field) }},
+      {%- endif %}
+    {%- endfor %}
+}
+
+impl {{ name }} {
+    {%- for field in cfb.fields_sorted_by_offset(object) %}
+    const VT_{{ cfb.field_name(field) | upper }}: usize = {{ field.Offset() }};
+    const SIZE_{{ cfb.field_name(field) | upper }}: usize = {{ cfb.field_size(field) }};
+    const ALIGNMENT_{{ cfb.field_name(field) | upper }}: usize = {{ cfb.field_alignment(field) }};
+    {%- endfor %}
+    const ALIGNMENT: usize = {{ cfb.table_alignment(object) }};
+}
+
+impl<'c> Component<'c> for {{ name }} {
+    fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
+        let vtable_start = {
+            let mut vtable = builder.start_vtable();
+            {%- for field in cfb.fields_sorted_by_alignement(object): %}
+            if {{ cfb.field_present(field) }} {
+                vtable.add_field(Self::VT_{{ cfb.field_name(field) | upper }}, Self::SIZE_{{ cfb.field_name(field) | upper }}, Self::ALIGNMENT_{{ cfb.field_name(field) | upper }});
+            }
+            {%- endfor %}
+            vtable.finish()
+        };
+
+        builder.align_after(SIZE_OF_SOFFSET, Self::ALIGNMENT);
+
+        let table_start = builder.tell();
+        builder.push_scalar((table_start - vtable_start) as SOffset);
+
+        {%- for field in cfb.fields_sorted_by_alignement(object): %}
+          {%- if cfb.is_union(field) %}
+        let {{ cfb.field_name(field) }}_type = self.{{ cfb.field_name(field) }}.as_ref().map(|v| v.union_type());
+          {%- endif %}
+        if {{ cfb.field_present(field, extract='f') }} {
+            builder.align(Self::ALIGNMENT_{{ cfb.field_name(field) | upper }});
+          {%- if cfb.is_string(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(StringComponent::new(self.{{ cfb.field_name(field) }}))
+            ));
+          {%- elif cfb.is_vector(field) %}
+            {%- if cfb.is_element_scalar(field) %}
+              {%- set nested_table = cfb.field_nested_table(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+              {%- if nested_table is none %}
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(ScalarVectorComponent::new(self.{{ cfb.field_name(field) }}, {{ cfb.element_aligment(field) }})),
+            ));
+              {%- else %}
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(NestedBufferComponent::new(f)),
+            ));
+              {%- endif %}
+            {%- elif cfb.is_element_string(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            let children = self.{{ cfb.field_name(field) }}.into_iter().map(StringComponent::new);
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(ReferenceVectorComponent::new(children)),
+            ));
+            {%- elif cfb.is_element_table(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(ReferenceVectorComponent::new(self.{{ cfb.field_name(field) }})),
+            ));
+            {%- endif %}
+          {%- elif cfb.is_table(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            builder.push_component(DesignatedComponent::new(
+                offset_position,
+                Box::new(f),
+            ));
+          {%- elif cfb.is_union(field) %}
+            let offset_position = builder.tell();
+            builder.pad(Self::SIZE_{{ cfb.field_name(field) | upper }});
+            {%- set ty = cfb.base_name(cfb.schema.Enums(field.Type().Index())) %}
+            let component: Box<dyn Component<'c> + 'c> = match f {
+            {%- for val in cfb.enum_values(cfb.field_union_enum(field)) %}
+              {%- if val.Value() != 0 %}
+                {{ ty }}::{{ val.Name().decode('utf-8') }}(v) => Box::new(v),
+              {%- endif %}
+            {%- endfor %}
+            };
+            builder.push_component(DesignatedComponent::new(offset_position, component));
+          {%- elif cfb.is_union_type(field) %}
+            builder.push_scalar(f);
+          {%- else %}
+            builder.push_scalar(self.{{ cfb.field_name(field) }});
+          {%- endif %}
+        }
+        {%- endfor %}
+
+        table_start
+    }
+}
+    {%- endif %}
+  {%- endfor %}
+{%- endif -%}
+
+{% for name, mod in mod.children.items() -%}
+{% set mod_content %}
+  {%- include "_builder_mod.rs.jinja" -%}
+{% endset -%}
+pub mod {{ name }} {
+    {{ mod_content | indent }}
+}
+{% endfor %}

@@ -1,0 +1,9 @@
+namespace example;
+
+table Stat {
+  hp: uint32;
+}
+
+table Hero {
+  stats: [Stat];
+}

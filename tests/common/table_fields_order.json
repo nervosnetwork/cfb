@@ -1,0 +1,290 @@
+{
+  "objects": [
+    {
+      "name": "Complex",
+      "fields": [
+        {
+          "name": "a",
+          "type": {
+            "base_type": "ULong"
+          }
+        },
+        {
+          "name": "b",
+          "type": {
+            "base_type": "ULong"
+          },
+          "id": 1,
+          "offset": 8
+        }
+      ],
+      "is_struct": true,
+      "minalign": 8,
+      "bytesize": 16
+    },
+    {
+      "name": "Err",
+      "fields": [
+        {
+          "name": "reason",
+          "type": {
+            "base_type": "String"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ok",
+      "fields": [
+        {
+          "name": "value",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "T",
+      "fields": [
+        {
+          "name": "a_ubyte",
+          "type": {
+            "base_type": "UByte"
+          },
+          "offset": 4
+        },
+        {
+          "name": "a_uint32",
+          "type": {
+            "base_type": "UInt"
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "a_uint64",
+          "type": {
+            "base_type": "ULong"
+          },
+          "id": 5,
+          "offset": 14
+        },
+        {
+          "name": "color",
+          "type": {
+            "base_type": "Byte",
+            "index": 0
+          },
+          "id": 7,
+          "offset": 18
+        },
+        {
+          "name": "complex",
+          "type": {
+            "base_type": "Obj",
+            "index": 0
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "result",
+          "type": {
+            "base_type": "Union",
+            "index": 1
+          },
+          "id": 4,
+          "offset": 12
+        },
+        {
+          "name": "result_type",
+          "type": {
+            "base_type": "UType",
+            "index": 1
+          },
+          "id": 3,
+          "offset": 10
+        },
+        {
+          "name": "uint16_array",
+          "type": {
+            "base_type": "Vector",
+            "element": "UShort"
+          },
+          "id": 6,
+          "offset": 16
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+    {
+      "name": "Color",
+      "values": [
+        {
+          "name": "Red",
+          "union_type": {
+          }
+        },
+        {
+          "name": "Green",
+          "value": 1,
+          "union_type": {
+          }
+        },
+        {
+          "name": "Blue",
+          "value": 2,
+          "union_type": {
+          }
+        }
+      ],
+      "underlying_type": {
+        "base_type": "Byte",
+        "index": 0
+      }
+    },
+    {
+      "name": "Result",
+      "values": [
+        {
+          "name": "NONE",
+          "union_type": {
+          }
+        },
+        {
+          "name": "Ok",
+          "value": 1,
+          "object": {
+            "name": "Ok",
+            "fields": [
+              {
+                "name": "value",
+                "type": {
+                  "base_type": "UInt"
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 2
+          }
+        },
+        {
+          "name": "Err",
+          "value": 2,
+          "object": {
+            "name": "Err",
+            "fields": [
+              {
+                "name": "reason",
+                "type": {
+                  "base_type": "String"
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 1
+          }
+        }
+      ],
+      "is_union": true,
+      "underlying_type": {
+        "base_type": "UType",
+        "index": 1
+      }
+    }
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "root_table": {
+    "name": "T",
+    "fields": [
+      {
+        "name": "a_ubyte",
+        "type": {
+          "base_type": "UByte"
+        },
+        "offset": 4
+      },
+      {
+        "name": "a_uint32",
+        "type": {
+          "base_type": "UInt"
+        },
+        "id": 2,
+        "offset": 8
+      },
+      {
+        "name": "a_uint64",
+        "type": {
+          "base_type": "ULong"
+        },
+        "id": 5,
+        "offset": 14
+      },
+      {
+        "name": "color",
+        "type": {
+          "base_type": "Byte",
+          "index": 0
+        },
+        "id": 7,
+        "offset": 18
+      },
+      {
+        "name": "complex",
+        "type": {
+          "base_type": "Obj",
+          "index": 0
+        },
+        "id": 1,
+        "offset": 6
+      },
+      {
+        "name": "result",
+        "type": {
+          "base_type": "Union",
+          "index": 1
+        },
+        "id": 4,
+        "offset": 12
+      },
+      {
+        "name": "result_type",
+        "type": {
+          "base_type": "UType",
+          "index": 1
+        },
+        "id": 3,
+        "offset": 10
+      },
+      {
+        "name": "uint16_array",
+        "type": {
+          "base_type": "Vector",
+          "element": "UShort"
+        },
+        "id": 6,
+        "offset": 16
+      }
+    ],
+    "minalign": 1
+  },
+  "services": [
+
+  ]
+}

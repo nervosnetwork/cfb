@@ -1,0 +1,52 @@
+{
+  "objects": [
+    {
+      "name": "example.Bag",
+      "fields": [
+        {
+          "name": "colors",
+          "type": {
+            "base_type": "Vector",
+            "element": "Byte",
+            "index": 0
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+    {
+      "name": "example.Color",
+      "values": [
+        {
+          "name": "Red",
+          "union_type": {
+          }
+        },
+        {
+          "name": "Green",
+          "value": 1,
+          "union_type": {
+          }
+        },
+        {
+          "name": "Blue",
+          "value": 2,
+          "union_type": {
+          }
+        }
+      ],
+      "underlying_type": {
+        "base_type": "Byte",
+        "index": 0
+      }
+    }
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

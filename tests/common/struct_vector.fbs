@@ -1,0 +1,10 @@
+namespace example;
+
+struct Stat {
+  hp: uint32;
+  mp: uint8;
+}
+
+table Hero {
+  stats: [Stat];
+}

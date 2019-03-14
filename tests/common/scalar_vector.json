@@ -1,0 +1,26 @@
+{
+  "objects": [
+    {
+      "name": "example.Sensor",
+      "fields": [
+        {
+          "name": "readings",
+          "type": {
+            "base_type": "Vector",
+            "element": "UInt"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

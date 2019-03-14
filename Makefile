@@ -1,18 +1,28 @@
 FLATC := flatc
 
+FBS := $(wildcard tests/common/*.fbs)
+BFBS := $(patsubst %.fbs,%.bfbs,${FBS})
+JSON := $(patsubst %.fbs,%.json,${FBS})
+FLATC_RS := $(patsubst %.fbs,%_generated.rs,${FBS})
+BUILDER := $(patsubst %.fbs,%_builder.rs,${FBS})
+
+TEMPLATES := $(wildcard cfb/templates/*.jinja)
+
 ifeq (${VIRTUAL_ENV},)
   PIPENV_RUN := pipenv run
 endif
+VERBOSE := $(if ${CI},--verbose,)
 
 test: test-python test-rust
 test-python:
 	${PIPENV_RUN} python -m unittest discover
 test-rust:
-	cargo test
+	cargo test ${VERBOSE}
 
-gen: tests/common/example_generated.rs tests/common/example.bfbs tests/common/example.json
+gen: ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
 gen-clean:
-	rm -f tests/common/example_generated.rs tests/common/example.bfbs tests/common/example.json
+	rm -f ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
+gen-force: gen-clean gen
 
 doc:
 	cargo doc
@@ -28,9 +38,8 @@ doc-publish: doc-clean doc
 	git push --force origin gh-pages
 	git checkout master
 
-tests/common/example_generated.rs: tests/common/example.fbs
-tests/common/example.bfbs: tests/common/example.fbs
-tests/common/example.json: tests/common/example.bfbs
+%_builder.rs: %.bfbs ${TEMPLATES}
+	pipenv run bin/cfbc -o $(shell dirname $@) $<
 
 %_generated.rs: %.fbs
 	$(FLATC) -r -o $(shell dirname $@) $<
@@ -42,20 +51,25 @@ tests/common/example.json: tests/common/example.bfbs
 	$(FLATC) -t --strict-json -o $(shell dirname $@) reflection.fbs -- $<
 
 fmt:
-	cargo fmt -- --check
+	cargo fmt --all -- --check
 
 clippy:
-	cargo clippy -- -D warnings -D clippy::clone_on_ref_ptr -D unused_extern_crates -D clippy::enum_glob_use
+	cargo clippy --all --all-targets --all-features -- -D warnings -D clippy::clone_on_ref_ptr -D clippy::enum_glob_use
 
 ci: ci-rust ci-python
 
 ci-rust: fmt clippy test-rust
 	git diff --exit-code Cargo.lock
 
-ci-python: test-python
+ci-gen-clean:
+	rm -f ${BUILDER}
+ci-gen: ${BUILDER}
+	git diff --exit-code tests/common
+
+ci-python: test-python ci-gen-clean ci-gen
 
 .PHONY: test test-python test-rust
-.PHONY: gen gen-clean
+.PHONY: gen gen-clean gen-force
 .PHONY: doc doc-clean doc-publish
 .PHONY: fmt clippy
-.PHONY: ci ci-rust ci-python
+.PHONY: ci ci-rust ci-python ci-gen ci-gen-clean

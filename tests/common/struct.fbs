@@ -1,0 +1,11 @@
+namespace example;
+
+struct Vec3 {
+  x: uint64;
+  y: uint8;
+  z: uint64;
+}
+
+table Point {
+  position: Vec3;
+}
