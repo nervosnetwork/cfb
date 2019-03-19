@@ -1,11 +1,15 @@
+import re
 from cfb.namespace import Namespace
 from cfb.reflection.BaseType import BaseType
 from cfb.constants import SIZE_OF_UOFFSET, BASE_TYPE_SIZE, BASE_TYPE_RUST_TYPE, BASE_TYPE_DEFAULT
 from cfb.struct import struct_padded_fields
 
+FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
+ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 class Context(object):
-    def __init__(self, schema):
+    def __init__(self, basename, schema):
+        self.basename = basename
         self.schema = schema
         self.root = Namespace.from_schema(schema)
 
@@ -197,3 +201,7 @@ class Context(object):
 
     def fields_sorted_by_offset(self, object):
         return list(sorted((object.Fields(i) for i in range(object.FieldsLength())), key=lambda f: f.Offset()))
+
+    def camel_to_snake(_self, name):
+        s1 = FIRST_CAP_RE.sub(r'\1_\2', name)
+        return ALL_CAP_RE.sub(r'\1_\2', s1).lower()

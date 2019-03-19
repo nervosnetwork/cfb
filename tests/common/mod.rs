@@ -58,6 +58,8 @@ pub mod table_field_builder;
 #[allow(clippy::all)]
 pub mod table_field_generated;
 #[rustfmt::skip]
+pub mod table_field_generated_verifier;
+#[rustfmt::skip]
 pub mod table_fields_order_builder;
 #[rustfmt::skip]
 pub mod table_vector_builder;

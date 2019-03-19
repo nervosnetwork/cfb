@@ -1,0 +1,25 @@
+{%- if mod.has_definitions() %}
+  {%- for name, object in mod.objects.items() %}
+    {%- if not object.IsStruct() %}
+
+impl<'a> Verify for reader::{{ name }}<'a> {
+    fn verify(&self) -> Result {
+        Ok(())
+    }
+}
+    {%- endif %}
+  {%- endfor %}
+{%- endif %}
+
+{%- for name, mod in mod.children.items() %}
+  {%- set mod_content %}
+    {%- include "_legacy_verifier_mod.rs.jinja" %}
+  {%- endset %}
+pub mod {{ name }} {
+    #![allow(unused_imports)]
+
+    use super::reader::{{ name }} as reader;
+    use super::{Error, Result, Verify};
+    {{- mod_content | indent }}
+}
+{%- endfor %}
