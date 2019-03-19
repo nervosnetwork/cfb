@@ -4,6 +4,12 @@
 
 impl<'a> Verify for reader::{{ name }}<'a> {
     fn verify(&self) -> Result {
+        let tab = self._tab;
+
+        if tab.loc + flatbuffers::SIZE_UOFFSET > tab.buf.len() {
+            return Err(Error::OutOfBounds);
+        }
+
         Ok(())
     }
 }
@@ -19,7 +25,8 @@ pub mod {{ name }} {
     #![allow(unused_imports)]
 
     use super::reader::{{ name }} as reader;
-    use super::{Error, Result, Verify};
+    pub use super::{Error, Result, Verify};
+    use flatbuffers;
     {{- mod_content | indent }}
 }
 {%- endfor %}

@@ -32,16 +32,29 @@ pub mod example {
     #![allow(unused_imports)]
 
     use super::reader::example as reader;
-    use super::{Error, Result, Verify};
+    pub use super::{Error, Result, Verify};
+    use flatbuffers;
 
     impl<'a> Verify for reader::Hero<'a> {
         fn verify(&self) -> Result {
+            let tab = self._tab;
+
+            if tab.loc + flatbuffers::SIZE_UOFFSET > tab.buf.len() {
+                return Err(Error::OutOfBounds);
+            }
+
             Ok(())
         }
     }
 
     impl<'a> Verify for reader::Stat<'a> {
         fn verify(&self) -> Result {
+            let tab = self._tab;
+
+            if tab.loc + flatbuffers::SIZE_UOFFSET > tab.buf.len() {
+                return Err(Error::OutOfBounds);
+            }
+
             Ok(())
         }
     }
