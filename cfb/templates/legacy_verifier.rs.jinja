@@ -27,5 +27,20 @@ impl error::Error for Error {}
 pub trait Verify {
     fn verify(&self) -> Result;
 }
+
+pub fn get_root<'a, T>(data: &'a [u8]) -> result::Result<T::Inner, Error>
+where
+    T: flatbuffers::Follow<'a> + 'a,
+    T::Inner: Verify,
+{
+    if data.len() < flatbuffers::SIZE_UOFFSET {
+        return Err(Error::OutOfBounds);
+    }
+
+    let root = flatbuffers::get_root::<T>(data);
+    let _ = root.verify()?;
+    Ok(root)
+}
+
 {% set mod = cfb.root -%}
 {% include "_legacy_verifier_mod.rs.jinja" %}

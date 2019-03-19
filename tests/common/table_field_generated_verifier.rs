@@ -28,6 +28,21 @@ pub trait Verify {
     fn verify(&self) -> Result;
 }
 
+pub fn get_root<'a, T>(data: &'a [u8]) -> result::Result<T::Inner, Error>
+where
+    T: flatbuffers::Follow<'a> + 'a,
+    T::Inner: Verify,
+{
+    if data.len() < flatbuffers::SIZE_UOFFSET {
+        return Err(Error::OutOfBounds);
+    }
+
+    let root = flatbuffers::get_root::<T>(data);
+    let _ = root.verify()?;
+    Ok(root)
+}
+
+
 pub mod example {
     #![allow(unused_imports)]
 
@@ -38,8 +53,17 @@ pub mod example {
     impl<'a> Verify for reader::Hero<'a> {
         fn verify(&self) -> Result {
             let tab = self._tab;
+            if tab.loc + flatbuffers::SIZE_SOFFSET > tab.buf.len() {
+                return Err(Error::OutOfBounds);
+            }
 
-            if tab.loc + flatbuffers::SIZE_UOFFSET > tab.buf.len() {
+            let vtab_loc = {
+                let soffset_slice = &tab.buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
+                let soffset = flatbuffers::read_scalar::<flatbuffers::SOffsetT>(soffset_slice);
+                (tab.loc as flatbuffers::SOffsetT - soffset) as usize
+            };
+
+            if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > tab.buf.len() {
                 return Err(Error::OutOfBounds);
             }
 
@@ -50,8 +74,17 @@ pub mod example {
     impl<'a> Verify for reader::Stat<'a> {
         fn verify(&self) -> Result {
             let tab = self._tab;
+            if tab.loc + flatbuffers::SIZE_SOFFSET > tab.buf.len() {
+                return Err(Error::OutOfBounds);
+            }
 
-            if tab.loc + flatbuffers::SIZE_UOFFSET > tab.buf.len() {
+            let vtab_loc = {
+                let soffset_slice = &tab.buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
+                let soffset = flatbuffers::read_scalar::<flatbuffers::SOffsetT>(soffset_slice);
+                (tab.loc as flatbuffers::SOffsetT - soffset) as usize
+            };
+
+            if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > tab.buf.len() {
                 return Err(Error::OutOfBounds);
             }
 
