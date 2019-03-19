@@ -86,8 +86,13 @@ pub mod example {
             }
             if Self::VT_STAT as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
                 let voffset = vtab.get(Self::VT_STAT) as usize;
-                if voffset + 4 > object_inline_num_bytes {
-                    return Err(Error::OutOfBounds);
+                if voffset > 0 {
+                    if voffset + 4 > object_inline_num_bytes {
+                        return Err(Error::OutOfBounds);
+                    }
+                    if let Some(f) = self.stat() {
+                        f.verify()?;
+                    }
                 }
             }
 
@@ -131,8 +136,10 @@ pub mod example {
             }
             if Self::VT_HP as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
                 let voffset = vtab.get(Self::VT_HP) as usize;
-                if voffset + 4 > object_inline_num_bytes {
-                    return Err(Error::OutOfBounds);
+                if voffset > 0 {
+                    if voffset + 4 > object_inline_num_bytes {
+                        return Err(Error::OutOfBounds);
+                    }
                 }
             }
 

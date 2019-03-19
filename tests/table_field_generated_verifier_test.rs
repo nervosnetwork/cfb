@@ -72,3 +72,27 @@ fn test_table_fields_offset_out_of_bounds() {
         assert_eq!(hero, Err(verifier::Error::OutOfBounds));
     }
 }
+
+#[test]
+fn test_nested_table_field_out_of_bounds() {
+    let buf = [
+        le!(10u32),
+        // vtable
+        le!(6u16),
+        le!(8u16),
+        le!(4u16),
+        // hero
+        le!(6i32),
+        le!(4u32),
+        // vtable
+        le!(6u16),
+        le!(8u16),
+        le!(6u16),
+        // stat
+        le!(6i32),
+        le!(8u32),
+    ]
+    .concat();
+    let hero = get_root::<reader::Hero>(&buf);
+    assert_eq!(hero, Err(verifier::Error::OutOfBounds));
+}
