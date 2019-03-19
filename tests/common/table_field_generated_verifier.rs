@@ -38,7 +38,7 @@ where
     }
 
     let root = flatbuffers::get_root::<T>(data);
-    let _ = root.verify()?;
+    root.verify()?;
     Ok(root)
 }
 
@@ -53,17 +53,24 @@ pub mod example {
     impl<'a> Verify for reader::Hero<'a> {
         fn verify(&self) -> Result {
             let tab = self._tab;
-            if tab.loc + flatbuffers::SIZE_SOFFSET > tab.buf.len() {
+            let buf = tab.buf;
+            let buf_len = buf.len();
+
+            if tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
                 return Err(Error::OutOfBounds);
             }
 
             let vtab_loc = {
-                let soffset_slice = &tab.buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
+                let soffset_slice = &buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
                 let soffset = flatbuffers::read_scalar::<flatbuffers::SOffsetT>(soffset_slice);
                 (tab.loc as flatbuffers::SOffsetT - soffset) as usize
             };
+            if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > buf_len {
+                return Err(Error::OutOfBounds);
+            }
 
-            if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > tab.buf.len() {
+            let vtab = tab.vtable();
+            if vtab_loc + vtab.num_bytes() > buf_len {
                 return Err(Error::OutOfBounds);
             }
 
@@ -74,17 +81,24 @@ pub mod example {
     impl<'a> Verify for reader::Stat<'a> {
         fn verify(&self) -> Result {
             let tab = self._tab;
-            if tab.loc + flatbuffers::SIZE_SOFFSET > tab.buf.len() {
+            let buf = tab.buf;
+            let buf_len = buf.len();
+
+            if tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
                 return Err(Error::OutOfBounds);
             }
 
             let vtab_loc = {
-                let soffset_slice = &tab.buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
+                let soffset_slice = &buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
                 let soffset = flatbuffers::read_scalar::<flatbuffers::SOffsetT>(soffset_slice);
                 (tab.loc as flatbuffers::SOffsetT - soffset) as usize
             };
+            if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > buf_len {
+                return Err(Error::OutOfBounds);
+            }
 
-            if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > tab.buf.len() {
+            let vtab = tab.vtable();
+            if vtab_loc + vtab.num_bytes() > buf_len {
                 return Err(Error::OutOfBounds);
             }
 

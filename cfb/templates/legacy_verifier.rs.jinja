@@ -38,7 +38,7 @@ where
     }
 
     let root = flatbuffers::get_root::<T>(data);
-    let _ = root.verify()?;
+    root.verify()?;
     Ok(root)
 }
 
