@@ -73,6 +73,9 @@ pub mod example {
             if vtab_loc + vtab.num_bytes() > buf_len {
                 return Err(Error::OutOfBounds);
             }
+            if tab.loc + vtab.object_inline_num_bytes() > buf_len {
+                return Err(Error::OutOfBounds);
+            }
 
             Ok(())
         }
@@ -99,6 +102,9 @@ pub mod example {
 
             let vtab = tab.vtable();
             if vtab_loc + vtab.num_bytes() > buf_len {
+                return Err(Error::OutOfBounds);
+            }
+            if tab.loc + vtab.object_inline_num_bytes() > buf_len {
                 return Err(Error::OutOfBounds);
             }
 

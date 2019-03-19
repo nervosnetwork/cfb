@@ -30,3 +30,10 @@ fn test_vtable_body_out_of_bounds() {
     let hero = get_root::<reader::Hero>(&buf);
     assert_eq!(hero, Err(verifier::Error::OutOfBounds));
 }
+
+#[test]
+fn test_table_body_out_of_bounds() {
+    let buf = [le!(8u32), le!(4u16), le!(6u16), le!(4i32)].concat();
+    let hero = get_root::<reader::Hero>(&buf);
+    assert_eq!(hero, Err(verifier::Error::OutOfBounds));
+}
