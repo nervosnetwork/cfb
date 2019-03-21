@@ -87,6 +87,7 @@ pub mod example {
                     if voffset + 4 > object_inline_num_bytes {
                         return Err(Error::OutOfBounds);
                     }
+
                     {
                         let offset_loc = tab.loc + voffset;
                         let loc = offset_loc

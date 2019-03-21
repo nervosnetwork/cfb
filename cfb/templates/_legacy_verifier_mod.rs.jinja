@@ -39,15 +39,18 @@ impl<'a> Verify for reader::{{ name }}<'a> {
       {%- for field in cfb.fields_sorted_by_offset(object) %}
         if Self::VT_{{ cfb.field_name(field) | upper }} as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
             let voffset = vtab.get(Self::VT_{{ cfb.field_name(field) | upper }}) as usize;
+        {%- if cfb.is_table(field) or cfb.is_string(field) %}
             if voffset > 0 {
                 if voffset + {{ cfb.field_size(field) }} > object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
                 }
-        {%- if cfb.is_table(field) %}
+          {%- if cfb.is_table(field) %}
+
                 if let Some(f) = self.{{ cfb.field_name(field) }}() {
                     f.verify()?;
                 }
-        {%- elif cfb.is_string(field) %}
+          {%- elif cfb.is_string(field) %}
+
                 {
                     let offset_loc = tab.loc + voffset;
                     let loc = offset_loc
@@ -65,8 +68,14 @@ impl<'a> Verify for reader::{{ name }}<'a> {
                         return Err(Error::NonNullTerminatedString);
                     }
                 }
-        {%- endif %}
+          {%- else %}
+          {%- endif %}
             }
+        {%- else %}
+            if voffset > 0 && voffset + {{ cfb.field_size(field) }} > object_inline_num_bytes {
+                return Err(Error::OutOfBounds);
+            }
+        {%- endif %}
         }
       {%- endfor %}
 
