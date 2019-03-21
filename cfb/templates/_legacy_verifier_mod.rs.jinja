@@ -53,20 +53,7 @@ impl<'a> Verify for reader::{{ name }}<'a> {
 
                 {
                     let offset_loc = tab.loc + voffset;
-                    let loc = offset_loc
-                        + flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&buf[offset_loc..])
-                            as usize;
-                    if loc + flatbuffers::SIZE_UOFFSET > buf_len {
-                        return Err(Error::OutOfBounds);
-                    }
-                    let len =
-                        flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&buf[loc..]) as usize;
-                    if loc + flatbuffers::SIZE_UOFFSET + len + 1 > buf_len {
-                        return Err(Error::OutOfBounds);
-                    }
-                    if buf[loc + flatbuffers::SIZE_UOFFSET + len] != 0 {
-                        return Err(Error::NonNullTerminatedString);
-                    }
+                    StringVerifier::new(buf, offset_loc).verify()?;
                 }
           {%- else %}
           {%- endif %}
@@ -94,7 +81,7 @@ pub mod {{ name }} {
     #![allow(unused_imports)]
 
     use super::reader::{{ name }} as reader;
-    pub use super::{Error, Result, Verify};
+    pub use super::{Error, Result, Verify, StringVerifier};
     use flatbuffers;
     {{- mod_content | indent }}
 }

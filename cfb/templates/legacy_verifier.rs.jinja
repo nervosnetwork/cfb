@@ -1,3 +1,4 @@
+use flatbuffers;
 use super::{{ cfb.basename }}_generated as reader;
 use std::error;
 use std::fmt;
@@ -24,6 +25,44 @@ impl error::Error for Error {}
 
 pub trait Verify {
     fn verify(&self) -> Result;
+}
+
+pub struct StringVerifier<'a> {
+    pub buf: &'a [u8],
+    pub offset_loc: usize,
+}
+
+impl<'a> StringVerifier<'a> {
+    pub fn new(buf: &'a [u8], offset_loc: usize) -> Self {
+        Self { buf, offset_loc }
+    }
+}
+
+impl<'a> Verify for StringVerifier<'a> {
+    fn verify(&self) -> Result {
+        let buf_len = self.buf.len();
+
+        if self.offset_loc + flatbuffers::SIZE_UOFFSET > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+
+        let loc = self.offset_loc
+            + flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&self.buf[self.offset_loc..])
+                as usize;
+        if loc + flatbuffers::SIZE_UOFFSET > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+        let len = flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&self.buf[loc..]) as usize;
+        if loc + flatbuffers::SIZE_UOFFSET + len + 1 > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+
+        if self.buf[loc + flatbuffers::SIZE_UOFFSET + len] != 0 {
+            return Err(Error::NonNullTerminatedString);
+        }
+
+        Ok(())
+    }
 }
 
 pub fn get_root<'a, T>(data: &'a [u8]) -> result::Result<T::Inner, Error>

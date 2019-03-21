@@ -1,3 +1,4 @@
+use flatbuffers;
 use super::string_generated as reader;
 use std::error;
 use std::fmt;
@@ -26,6 +27,44 @@ pub trait Verify {
     fn verify(&self) -> Result;
 }
 
+pub struct StringVerifier<'a> {
+    pub buf: &'a [u8],
+    pub offset_loc: usize,
+}
+
+impl<'a> StringVerifier<'a> {
+    pub fn new(buf: &'a [u8], offset_loc: usize) -> Self {
+        Self { buf, offset_loc }
+    }
+}
+
+impl<'a> Verify for StringVerifier<'a> {
+    fn verify(&self) -> Result {
+        let buf_len = self.buf.len();
+
+        if self.offset_loc + flatbuffers::SIZE_UOFFSET > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+
+        let loc = self.offset_loc
+            + flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&self.buf[self.offset_loc..])
+                as usize;
+        if loc + flatbuffers::SIZE_UOFFSET > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+        let len = flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&self.buf[loc..]) as usize;
+        if loc + flatbuffers::SIZE_UOFFSET + len + 1 > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+
+        if self.buf[loc + flatbuffers::SIZE_UOFFSET + len] != 0 {
+            return Err(Error::NonNullTerminatedString);
+        }
+
+        Ok(())
+    }
+}
+
 pub fn get_root<'a, T>(data: &'a [u8]) -> result::Result<T::Inner, Error>
 where
     T: flatbuffers::Follow<'a> + 'a,
@@ -44,7 +83,7 @@ pub mod example {
     #![allow(unused_imports)]
 
     use super::reader::example as reader;
-    pub use super::{Error, Result, Verify};
+    pub use super::{Error, Result, Verify, StringVerifier};
     use flatbuffers;
 
     impl<'a> Verify for reader::Author<'a> {
@@ -90,20 +129,7 @@ pub mod example {
 
                     {
                         let offset_loc = tab.loc + voffset;
-                        let loc = offset_loc
-                            + flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&buf[offset_loc..])
-                                as usize;
-                        if loc + flatbuffers::SIZE_UOFFSET > buf_len {
-                            return Err(Error::OutOfBounds);
-                        }
-                        let len =
-                            flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&buf[loc..]) as usize;
-                        if loc + flatbuffers::SIZE_UOFFSET + len + 1 > buf_len {
-                            return Err(Error::OutOfBounds);
-                        }
-                        if buf[loc + flatbuffers::SIZE_UOFFSET + len] != 0 {
-                            return Err(Error::NonNullTerminatedString);
-                        }
+                        StringVerifier::new(buf, offset_loc).verify()?;
                     }
                 }
             }
