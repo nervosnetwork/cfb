@@ -1,3 +1,5 @@
+#![macro_use]
+
 #[rustfmt::skip]
 pub mod data_alignment_builder;
 #[rustfmt::skip]
@@ -38,6 +40,8 @@ pub mod string_builder;
 #[allow(clippy::all)]
 pub mod string_generated;
 #[rustfmt::skip]
+pub mod string_generated_verifier;
+#[rustfmt::skip]
 pub mod string_vector_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
@@ -73,6 +77,13 @@ pub mod union_builder;
 pub mod union_generated;
 
 use flatbuffers::{Follow, Vector};
+
+#[macro_export]
+macro_rules! le {
+    ($e:expr) => {
+        &(($e).to_le_bytes())[..]
+    };
+}
 
 pub fn hex(bytes: &[u8]) -> String {
     bytes

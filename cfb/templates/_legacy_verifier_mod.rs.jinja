@@ -47,6 +47,24 @@ impl<'a> Verify for reader::{{ name }}<'a> {
                 if let Some(f) = self.{{ cfb.field_name(field) }}() {
                     f.verify()?;
                 }
+        {%- elif cfb.is_string(field) %}
+                {
+                    let offset_loc = tab.loc + voffset;
+                    let loc = offset_loc
+                        + flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&buf[offset_loc..])
+                            as usize;
+                    if loc + flatbuffers::SIZE_UOFFSET > buf_len {
+                        return Err(Error::OutOfBounds);
+                    }
+                    let len =
+                        flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&buf[loc..]) as usize;
+                    if loc + flatbuffers::SIZE_UOFFSET + len + 1 > buf_len {
+                        return Err(Error::OutOfBounds);
+                    }
+                    if buf[loc + flatbuffers::SIZE_UOFFSET + len] != 0 {
+                        return Err(Error::NonNullTerminatedString);
+                    }
+                }
         {%- endif %}
             }
         }
@@ -71,4 +89,4 @@ pub mod {{ name }} {
     use flatbuffers;
     {{- mod_content | indent }}
 }
-{%- endfor %}
+{% endfor %}

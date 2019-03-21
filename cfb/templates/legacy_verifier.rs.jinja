@@ -15,9 +15,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::OutOfBounds => write!(f, "memory access is out of bounds"),
-            Error::NonNullTerminatedString => {
-                write!(f, "string is not terminated with null")
-            }
+            Error::NonNullTerminatedString => write!(f, "string is not terminated with null"),
         }
     }
 }
@@ -41,6 +39,5 @@ where
     root.verify()?;
     Ok(root)
 }
-
 {% set mod = cfb.root -%}
 {% include "_legacy_verifier_mod.rs.jinja" %}
