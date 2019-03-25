@@ -100,7 +100,7 @@ impl<'a> Verify for reader::{{ name }}<'a> {
   {%- set mod_content %}
     {%- include "_legacy_verifier_mod.rs.jinja" %}
   {%- endset %}
-pub mod {{ name }} {
+pub mod {{ cfb.camel_to_snake(name) }} {
     #![allow(unused_imports)]
 
     use super::reader::{{ name }} as reader;

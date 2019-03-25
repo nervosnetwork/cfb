@@ -1,7 +1,7 @@
 import re
 from cfb.namespace import Namespace
 from cfb.reflection.BaseType import BaseType
-from cfb.constants import SIZE_OF_UOFFSET, BASE_TYPE_SIZE, BASE_TYPE_RUST_TYPE, BASE_TYPE_DEFAULT
+from cfb.constants import SIZE_OF_UOFFSET, BASE_TYPE_SIZE, BASE_TYPE_RUST_TYPE, BASE_TYPE_DEFAULT, RESERVED_KEYWORDS
 from cfb.struct import struct_padded_fields
 
 FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
@@ -133,7 +133,9 @@ class Context(object):
         return self.type_alignment(ty.BaseType(), ty.Index())
 
     def table_alignment(self, table):
-        return max(self.field_alignment(table.Fields(i)) for i in range(table.FieldsLength()))
+        if table.FieldsLength() > 0:
+            return max(self.field_alignment(table.Fields(i)) for i in range(table.FieldsLength()))
+        return SIZE_OF_UOFFSET
 
     def element_size(self, field):
         ty = field.Type()
@@ -150,7 +152,7 @@ class Context(object):
         return object.Name().decode('utf-8').split('.')[-1]
 
     def field_name(self, field):
-        return field.Name().decode('utf-8')
+        return self.safe_name(field.Name().decode('utf-8'))
 
     def field_union_enum(self, field):
         return self.schema.Enums(field.Type().Index())
@@ -208,3 +210,6 @@ class Context(object):
     def camel_to_snake(_self, name):
         s1 = FIRST_CAP_RE.sub(r'\1_\2', name)
         return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
+
+    def safe_name(_self, name):
+        return RESERVED_KEYWORDS.get(name, name)

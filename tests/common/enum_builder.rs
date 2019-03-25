@@ -1,5 +1,5 @@
 pub mod example {
-    #![allow(unused_imports)]
+    #![allow(unused_imports, clippy::large_enum_variant)]
 
     use cfb::builder::{
         Builder, Component, DesignatedComponent, NestedBufferComponent, ReferenceVectorComponent,

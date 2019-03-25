@@ -1,6 +1,8 @@
 #![macro_use]
 
 #[rustfmt::skip]
+pub mod ckb_builder;
+#[rustfmt::skip]
 pub mod data_alignment_builder;
 #[rustfmt::skip]
 pub mod data_order_builder;
