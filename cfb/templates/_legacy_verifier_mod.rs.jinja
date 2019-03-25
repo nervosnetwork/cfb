@@ -41,7 +41,7 @@ impl<'a> Verify for reader::{{ name }}<'a> {
 
         if Self::VT_{{ cfb.field_name(field) | upper }} as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
             let voffset = vtab.get(Self::VT_{{ cfb.field_name(field) | upper }}) as usize;
-        {%- if cfb.is_table(field) or cfb.is_string(field) or cfb.is_vector(field) %}
+        {%- if cfb.is_table(field) or cfb.is_string(field) or cfb.is_vector(field) or cfb.is_union(field) %}
             if voffset > 0 {
                 if voffset + {{ cfb.field_size(field) }} > object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
@@ -65,7 +65,20 @@ impl<'a> Verify for reader::{{ name }}<'a> {
             {%- else %}
                 {{ cfb.field_name(field) }}_verifier.verify_scalar_elements({{ cfb.element_size(field) }})?;
             {%- endif %}
-          {%- else %}
+          {%- elif cfb.is_union(field) %}
+            {%- set enum = cfb.schema.Enums(field.Type().Index()) %}
+
+                match self.{{ cfb.field_name(field) }}_type() {
+            {%- for v in cfb.enum_values(enum) %}
+              {%- if v.Name().decode('utf-8') != 'NONE' %}
+                    reader::{{ cfb.base_name(enum) }}::{{ v.Name().decode('utf-8') }} => self
+                        .{{ cfb.field_name(field) }}_as_{{ v.Name().decode('utf-8') | lower }}()
+                        .ok_or(Error::UnmatchedUnion)?
+                        .verify()?,
+              {%- endif %}
+            {%- endfor %}
+                    reader::{{ cfb.base_name(enum) }}::NONE => return Err(Error::UnmatchedUnion),
+                }
           {%- endif %}
             }
         {%- else %}

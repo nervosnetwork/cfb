@@ -8,6 +8,7 @@ use std::result;
 pub enum Error {
     OutOfBounds,
     NonNullTerminatedString,
+    UnmatchedUnion,
 }
 
 pub type Result = result::Result<(), Error>;
@@ -17,6 +18,7 @@ impl fmt::Display for Error {
         match self {
             Error::OutOfBounds => write!(f, "memory access is out of bounds"),
             Error::NonNullTerminatedString => write!(f, "string is not terminated with null"),
+            Error::UnmatchedUnion => write!(f, "union type and value does not match"),
         }
     }
 }
@@ -277,8 +279,22 @@ pub mod example {
 
             if Self::VT_ROLE as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
                 let voffset = vtab.get(Self::VT_ROLE) as usize;
-                if voffset > 0 && voffset + 4 > object_inline_num_bytes {
-                    return Err(Error::OutOfBounds);
+                if voffset > 0 {
+                    if voffset + 4 > object_inline_num_bytes {
+                        return Err(Error::OutOfBounds);
+                    }
+
+                    match self.role_type() {
+                        reader::Role::Hero => self
+                            .role_as_hero()
+                            .ok_or(Error::UnmatchedUnion)?
+                            .verify()?,
+                        reader::Role::Monster => self
+                            .role_as_monster()
+                            .ok_or(Error::UnmatchedUnion)?
+                            .verify()?,
+                        reader::Role::NONE => return Err(Error::UnmatchedUnion),
+                    }
                 }
             }
 

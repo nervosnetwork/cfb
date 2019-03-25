@@ -8,6 +8,7 @@ use std::result;
 pub enum Error {
     OutOfBounds,
     NonNullTerminatedString,
+    UnmatchedUnion,
 }
 
 pub type Result = result::Result<(), Error>;
@@ -17,6 +18,7 @@ impl fmt::Display for Error {
         match self {
             Error::OutOfBounds => write!(f, "memory access is out of bounds"),
             Error::NonNullTerminatedString => write!(f, "string is not terminated with null"),
+            Error::UnmatchedUnion => write!(f, "union type and value does not match"),
         }
     }
 }

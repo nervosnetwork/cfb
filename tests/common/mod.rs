@@ -81,6 +81,8 @@ pub mod union_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 pub mod union_generated;
+#[rustfmt::skip]
+pub mod union_generated_verifier;
 
 use flatbuffers::{Follow, Vector};
 
