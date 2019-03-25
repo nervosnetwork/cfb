@@ -30,6 +30,7 @@ impl<'a> Verify for reader::{{ name }}<'a> {
         if tab.loc + object_inline_num_bytes > buf_len {
             return Err(Error::OutOfBounds);
         }
+
         for i in 0..vtab.num_fields() {
             let voffset = vtab.get_field(i) as usize;
             if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
@@ -37,9 +38,10 @@ impl<'a> Verify for reader::{{ name }}<'a> {
             }
         }
       {%- for field in cfb.fields_sorted_by_offset(object) %}
+
         if Self::VT_{{ cfb.field_name(field) | upper }} as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
             let voffset = vtab.get(Self::VT_{{ cfb.field_name(field) | upper }}) as usize;
-        {%- if cfb.is_table(field) or cfb.is_string(field) %}
+        {%- if cfb.is_table(field) or cfb.is_string(field) or cfb.is_vector(field) %}
             if voffset > 0 {
                 if voffset + {{ cfb.field_size(field) }} > object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
@@ -51,10 +53,18 @@ impl<'a> Verify for reader::{{ name }}<'a> {
                 }
           {%- elif cfb.is_string(field) %}
 
-                {
-                    let offset_loc = tab.loc + voffset;
-                    StringVerifier::new(buf, offset_loc).verify()?;
-                }
+                StringVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?).verify()?;
+          {%- elif cfb.is_vector(field) %}
+
+                let {{ cfb.field_name(field) }}_verifier =
+                    VectorVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?);
+            {%- if cfb.is_element_string(field) %}
+                {{ cfb.field_name(field) }}_verifier.verify_reference_elements::<StringVerifier>()?;
+            {%- elif cfb.is_element_table(field) %}
+                {{ cfb.field_name(field) }}_verifier.verify_reference_elements::<reader::{{ cfb.base_name(cfb.schema.Objects(field.Type().Index())) }}>()?;
+            {%- else %}
+                {{ cfb.field_name(field) }}_verifier.verify_scalar_elements({{ cfb.element_size(field) }})?;
+            {%- endif %}
           {%- else %}
           {%- endif %}
             }
@@ -81,8 +91,8 @@ pub mod {{ name }} {
     #![allow(unused_imports)]
 
     use super::reader::{{ name }} as reader;
-    pub use super::{Error, Result, Verify, StringVerifier};
-    use flatbuffers;
+    pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
+    use flatbuffers::{self, Follow};
     {{- mod_content | indent }}
 }
 {% endfor %}

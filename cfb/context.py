@@ -104,41 +104,44 @@ class Context(object):
     def rust_type(self, cfb_type):
         return BASE_TYPE_RUST_TYPE[cfb_type]
 
-    def field_size(self, field):
-        base_type = field.Type().BaseType()
-        if base_type == BaseType.Obj:
-            obj = self.schema.Objects(field.Type().Index())
+    def type_size(self, cfb_type, index):
+        if cfb_type == BaseType.Obj:
+            obj = self.schema.Objects(index)
             if obj.IsStruct():
                 return obj.Bytesize()
 
             return SIZE_OF_UOFFSET
 
-        return BASE_TYPE_SIZE[field.Type().BaseType()]
+        return BASE_TYPE_SIZE[cfb_type]
 
-    def field_alignment(self, field):
-        base_type = field.Type().BaseType()
-        if base_type == BaseType.Obj:
-            obj = self.schema.Objects(field.Type().Index())
+    def type_alignment(self, cfb_type, index):
+        if cfb_type == BaseType.Obj:
+            obj = self.schema.Objects(index)
             if obj.IsStruct():
                 return obj.Minalign()
 
             return SIZE_OF_UOFFSET
 
-        return BASE_TYPE_SIZE[base_type]
+        return BASE_TYPE_SIZE[cfb_type]
+
+    def field_size(self, field):
+        ty = field.Type()
+        return self.type_size(ty.BaseType(), ty.Index())
+
+    def field_alignment(self, field):
+        ty = field.Type()
+        return self.type_alignment(ty.BaseType(), ty.Index())
 
     def table_alignment(self, table):
         return max(self.field_alignment(table.Fields(i)) for i in range(table.FieldsLength()))
 
+    def element_size(self, field):
+        ty = field.Type()
+        return self.type_size(ty.Element(), ty.Index())
+
     def element_aligment(self, field):
-        element = field.Type().Element()
-        if element == BaseType.Obj:
-            obj = self.schema.Objects(field.Type().Index())
-            if obj.IsStruct():
-                return obj.Minalign()
-
-            return SIZE_OF_UOFFSET
-
-        return BASE_TYPE_SIZE[element]
+        ty = field.Type()
+        return self.type_alignment(ty.Element(), ty.Index())
 
     def full_name(self, object):
         return object.Name().decode('utf-8').replace('.', '::')

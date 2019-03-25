@@ -25,6 +25,8 @@ pub mod scalar_vector_builder;
 #[allow(clippy::all)]
 pub mod scalar_vector_generated;
 #[rustfmt::skip]
+pub mod scalar_vector_generated_verifier;
+#[rustfmt::skip]
 pub mod scalars_with_different_size_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
@@ -46,6 +48,8 @@ pub mod string_vector_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 pub mod string_vector_generated;
+#[rustfmt::skip]
+pub mod string_vector_generated_verifier;
 #[rustfmt::skip]
 pub mod struct_builder;
 #[rustfmt::skip]
@@ -70,6 +74,8 @@ pub mod table_vector_builder;
 #[rustfmt::skip]
 #[allow(clippy::all)]
 pub mod table_vector_generated;
+#[rustfmt::skip]
+pub mod table_vector_generated_verifier;
 #[rustfmt::skip]
 pub mod union_builder;
 #[rustfmt::skip]

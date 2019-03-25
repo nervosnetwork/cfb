@@ -1,4 +1,4 @@
-use super::string_generated as reader;
+use super::scalars_with_same_size_generated as reader;
 use flatbuffers;
 use std::error;
 use std::fmt;
@@ -138,7 +138,7 @@ pub mod example {
     pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
     use flatbuffers::{self, Follow};
 
-    impl<'a> Verify for reader::Author<'a> {
+    impl<'a> Verify for reader::Point<'a> {
         fn verify(&self) -> Result {
             let tab = self._tab;
             let buf = tab.buf;
@@ -174,14 +174,17 @@ pub mod example {
                 }
             }
 
-            if Self::VT_NAME as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
-                let voffset = vtab.get(Self::VT_NAME) as usize;
-                if voffset > 0 {
-                    if voffset + 4 > object_inline_num_bytes {
-                        return Err(Error::OutOfBounds);
-                    }
+            if Self::VT_X as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+                let voffset = vtab.get(Self::VT_X) as usize;
+                if voffset > 0 && voffset + 8 > object_inline_num_bytes {
+                    return Err(Error::OutOfBounds);
+                }
+            }
 
-                    StringVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?).verify()?;
+            if Self::VT_Y as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+                let voffset = vtab.get(Self::VT_Y) as usize;
+                if voffset > 0 && voffset + 8 > object_inline_num_bytes {
+                    return Err(Error::OutOfBounds);
                 }
             }
 

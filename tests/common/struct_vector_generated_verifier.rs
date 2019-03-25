@@ -1,4 +1,4 @@
-use super::string_generated as reader;
+use super::struct_vector_generated as reader;
 use flatbuffers;
 use std::error;
 use std::fmt;
@@ -138,7 +138,7 @@ pub mod example {
     pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
     use flatbuffers::{self, Follow};
 
-    impl<'a> Verify for reader::Author<'a> {
+    impl<'a> Verify for reader::Hero<'a> {
         fn verify(&self) -> Result {
             let tab = self._tab;
             let buf = tab.buf;
@@ -174,14 +174,16 @@ pub mod example {
                 }
             }
 
-            if Self::VT_NAME as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
-                let voffset = vtab.get(Self::VT_NAME) as usize;
+            if Self::VT_STATS as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+                let voffset = vtab.get(Self::VT_STATS) as usize;
                 if voffset > 0 {
                     if voffset + 4 > object_inline_num_bytes {
                         return Err(Error::OutOfBounds);
                     }
 
-                    StringVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?).verify()?;
+                    let stats_verifier =
+                        VectorVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?);
+                    stats_verifier.verify_scalar_elements(8)?;
                 }
             }
 

@@ -1,5 +1,5 @@
-use flatbuffers;
 use super::table_field_generated as reader;
+use flatbuffers;
 use std::error;
 use std::fmt;
 use std::result;
@@ -27,14 +27,31 @@ pub trait Verify {
     fn verify(&self) -> Result;
 }
 
-pub struct StringVerifier<'a> {
-    pub buf: &'a [u8],
-    pub offset_loc: usize,
+fn read_uoffset(buf: &[u8], offset_loc: usize) -> usize {
+    flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&buf[offset_loc..]) as usize
 }
 
-impl<'a> StringVerifier<'a> {
-    pub fn new(buf: &'a [u8], offset_loc: usize) -> Self {
-        Self { buf, offset_loc }
+fn try_read_uoffset(buf: &[u8], offset_loc: usize) -> result::Result<usize, Error> {
+    if offset_loc + flatbuffers::SIZE_UOFFSET <= buf.len() {
+        Ok(read_uoffset(buf, offset_loc))
+    } else {
+        Err(Error::OutOfBounds)
+    }
+}
+
+pub fn try_follow_uoffset(buf: &[u8], offset_loc: usize) -> result::Result<usize, Error> {
+    try_read_uoffset(buf, offset_loc).map(|offset| offset_loc + offset)
+}
+
+pub struct StringVerifier<'a> {
+    buf: &'a [u8],
+    loc: usize,
+}
+
+impl<'a> flatbuffers::Follow<'a> for StringVerifier<'a> {
+    type Inner = Self;
+    fn follow(buf: &'a [u8], loc: usize) -> Self {
+        Self { buf, loc }
     }
 }
 
@@ -42,23 +59,58 @@ impl<'a> Verify for StringVerifier<'a> {
     fn verify(&self) -> Result {
         let buf_len = self.buf.len();
 
-        if self.offset_loc + flatbuffers::SIZE_UOFFSET > buf_len {
+        let len = try_read_uoffset(self.buf, self.loc)?;
+        if self.loc + flatbuffers::SIZE_UOFFSET + len + 1 > buf_len {
             return Err(Error::OutOfBounds);
         }
 
-        let loc = self.offset_loc
-            + flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&self.buf[self.offset_loc..])
-                as usize;
-        if loc + flatbuffers::SIZE_UOFFSET > buf_len {
-            return Err(Error::OutOfBounds);
-        }
-        let len = flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&self.buf[loc..]) as usize;
-        if loc + flatbuffers::SIZE_UOFFSET + len + 1 > buf_len {
-            return Err(Error::OutOfBounds);
-        }
-
-        if self.buf[loc + flatbuffers::SIZE_UOFFSET + len] != 0 {
+        if self.buf[self.loc + flatbuffers::SIZE_UOFFSET + len] != 0 {
             return Err(Error::NonNullTerminatedString);
+        }
+
+        Ok(())
+    }
+}
+
+pub struct VectorVerifier<'a> {
+    buf: &'a [u8],
+    loc: usize,
+}
+
+impl<'a> flatbuffers::Follow<'a> for VectorVerifier<'a> {
+    type Inner = Self;
+    fn follow(buf: &'a [u8], loc: usize) -> Self {
+        Self { buf, loc }
+    }
+}
+
+impl<'a> VectorVerifier<'a> {
+    pub fn verify_scalar_elements(&self, scalar_size: usize) -> Result {
+        let len = try_read_uoffset(self.buf, self.loc)?;
+
+        if self.loc + flatbuffers::SIZE_UOFFSET + len * scalar_size > self.buf.len() {
+            return Err(Error::OutOfBounds);
+        }
+
+        Ok(())
+    }
+
+    pub fn verify_reference_elements<E>(&self) -> Result
+    where
+        E: flatbuffers::Follow<'a>,
+        <E as flatbuffers::Follow<'a>>::Inner: Verify,
+    {
+        let len = try_read_uoffset(self.buf, self.loc)?;
+
+        let mut offset_loc = self.loc + flatbuffers::SIZE_UOFFSET;
+        let end_loc = offset_loc + len * flatbuffers::SIZE_UOFFSET;
+        if end_loc > self.buf.len() {
+            return Err(Error::OutOfBounds);
+        }
+
+        while offset_loc < end_loc {
+            E::follow(self.buf, offset_loc + read_uoffset(self.buf, offset_loc)).verify()?;
+            offset_loc += flatbuffers::SIZE_UOFFSET;
         }
 
         Ok(())
@@ -83,8 +135,8 @@ pub mod example {
     #![allow(unused_imports)]
 
     use super::reader::example as reader;
-    pub use super::{Error, Result, Verify, StringVerifier};
-    use flatbuffers;
+    pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
+    use flatbuffers::{self, Follow};
 
     impl<'a> Verify for reader::Hero<'a> {
         fn verify(&self) -> Result {
@@ -114,12 +166,14 @@ pub mod example {
             if tab.loc + object_inline_num_bytes > buf_len {
                 return Err(Error::OutOfBounds);
             }
+
             for i in 0..vtab.num_fields() {
                 let voffset = vtab.get_field(i) as usize;
                 if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
                 }
             }
+
             if Self::VT_STAT as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
                 let voffset = vtab.get(Self::VT_STAT) as usize;
                 if voffset > 0 {
@@ -165,12 +219,14 @@ pub mod example {
             if tab.loc + object_inline_num_bytes > buf_len {
                 return Err(Error::OutOfBounds);
             }
+
             for i in 0..vtab.num_fields() {
                 let voffset = vtab.get_field(i) as usize;
                 if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
                 }
             }
+
             if Self::VT_HP as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
                 let voffset = vtab.get(Self::VT_HP) as usize;
                 if voffset > 0 && voffset + 4 > object_inline_num_bytes {
