@@ -165,7 +165,9 @@ impl<'a> Verify for reader::Err<'a> {
 
         for i in 0..vtab.num_fields() {
             let voffset = vtab.get_field(i) as usize;
-            if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+            if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                || voffset >= object_inline_num_bytes
+            {
                 return Err(Error::OutOfBounds);
             }
         }
@@ -216,7 +218,9 @@ impl<'a> Verify for reader::Ok<'a> {
 
         for i in 0..vtab.num_fields() {
             let voffset = vtab.get_field(i) as usize;
-            if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+            if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                || voffset >= object_inline_num_bytes
+            {
                 return Err(Error::OutOfBounds);
             }
         }
@@ -263,7 +267,9 @@ impl<'a> Verify for reader::T<'a> {
 
         for i in 0..vtab.num_fields() {
             let voffset = vtab.get_field(i) as usize;
-            if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+            if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                || voffset >= object_inline_num_bytes
+            {
                 return Err(Error::OutOfBounds);
             }
         }

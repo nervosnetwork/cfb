@@ -3,6 +3,11 @@
 #[rustfmt::skip]
 pub mod ckb_builder;
 #[rustfmt::skip]
+#[allow(clippy::all)]
+pub mod ckb_generated;
+#[rustfmt::skip]
+pub mod ckb_generated_verifier;
+#[rustfmt::skip]
 pub mod data_alignment_builder;
 #[rustfmt::skip]
 pub mod data_order_builder;
@@ -101,6 +106,13 @@ pub fn hex(bytes: &[u8]) -> String {
         .map(|b| format!("{:02X}", b))
         .collect::<Vec<_>>()
         .join("")
+}
+
+pub fn from_hex(hex: &str) -> Result<Vec<u8>, std::num::ParseIntError> {
+    (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16))
+        .collect()
 }
 
 pub fn collect_flatbuffers_vector<'a, T: Follow<'a> + 'a>(vec: &Vector<'a, T>) -> Vec<T::Inner> {

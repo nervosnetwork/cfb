@@ -33,7 +33,9 @@ impl<'a> Verify for reader::{{ name }}<'a> {
 
         for i in 0..vtab.num_fields() {
             let voffset = vtab.get_field(i) as usize;
-            if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+            if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                || voffset >= object_inline_num_bytes
+            {
                 return Err(Error::OutOfBounds);
             }
         }
@@ -72,7 +74,7 @@ impl<'a> Verify for reader::{{ name }}<'a> {
             {%- for v in cfb.enum_values(enum) %}
               {%- if v.Name().decode('utf-8') != 'NONE' %}
                     reader::{{ cfb.base_name(enum) }}::{{ v.Name().decode('utf-8') }} => self
-                        .{{ cfb.field_name(field) }}_as_{{ v.Name().decode('utf-8') | lower }}()
+                        .{{ cfb.field_name(field) }}_as_{{ cfb.camel_to_snake(v.Name().decode('utf-8')) }}()
                         .ok_or(Error::UnmatchedUnion)?
                         .verify()?,
               {%- endif %}
@@ -103,7 +105,7 @@ impl<'a> Verify for reader::{{ name }}<'a> {
 pub mod {{ cfb.camel_to_snake(name) }} {
     #![allow(unused_imports)]
 
-    use super::reader::{{ name }} as reader;
+    use super::reader::{{ cfb.camel_to_snake(name) }} as reader;
     pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
     use flatbuffers::{self, Follow};
     {{- mod_content | indent }}

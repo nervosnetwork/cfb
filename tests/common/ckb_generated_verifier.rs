@@ -136,13 +136,13 @@ where
 pub mod ckb {
     #![allow(unused_imports)]
 
-    use super::reader::Ckb as reader;
+    use super::reader::ckb as reader;
     pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
     use flatbuffers::{self, Follow};
     pub mod protocol {
         #![allow(unused_imports)]
 
-        use super::reader::Protocol as reader;
+        use super::reader::protocol as reader;
         pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
         use flatbuffers::{self, Follow};
 
@@ -177,7 +177,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -230,7 +232,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -322,7 +326,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -375,7 +381,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -435,7 +443,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -488,7 +498,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -555,7 +567,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -641,7 +655,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -681,7 +697,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -793,7 +811,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -872,7 +892,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -932,7 +954,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -992,7 +1016,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1045,7 +1071,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1112,7 +1140,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1248,7 +1278,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1301,7 +1333,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1361,7 +1395,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1427,7 +1463,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1481,7 +1519,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1502,27 +1542,27 @@ pub mod ckb {
 
                         match self.payload_type() {
                             reader::RelayPayload::CompactBlock => self
-                                .payload_as_compactblock()
+                                .payload_as_compact_block()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::RelayPayload::ValidTransaction => self
-                                .payload_as_validtransaction()
+                                .payload_as_valid_transaction()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::RelayPayload::GetBlockTransactions => self
-                                .payload_as_getblocktransactions()
+                                .payload_as_get_block_transactions()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::RelayPayload::BlockTransactions => self
-                                .payload_as_blocktransactions()
+                                .payload_as_block_transactions()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::RelayPayload::GetBlockProposal => self
-                                .payload_as_getblockproposal()
+                                .payload_as_get_block_proposal()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::RelayPayload::BlockProposal => self
-                                .payload_as_blockproposal()
+                                .payload_as_block_proposal()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::RelayPayload::NONE => return Err(Error::UnmatchedUnion),
@@ -1565,7 +1605,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1632,7 +1674,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1699,7 +1743,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1720,7 +1766,7 @@ pub mod ckb {
 
                         match self.payload_type() {
                             reader::SyncPayload::GetHeaders => self
-                                .payload_as_getheaders()
+                                .payload_as_get_headers()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::SyncPayload::Headers => self
@@ -1728,7 +1774,7 @@ pub mod ckb {
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::SyncPayload::GetBlocks => self
-                                .payload_as_getblocks()
+                                .payload_as_get_blocks()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::SyncPayload::Block => self
@@ -1736,19 +1782,19 @@ pub mod ckb {
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::SyncPayload::SetFilter => self
-                                .payload_as_setfilter()
+                                .payload_as_set_filter()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::SyncPayload::AddFilter => self
-                                .payload_as_addfilter()
+                                .payload_as_add_filter()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::SyncPayload::ClearFilter => self
-                                .payload_as_clearfilter()
+                                .payload_as_clear_filter()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::SyncPayload::FilteredBlock => self
-                                .payload_as_filteredblock()
+                                .payload_as_filtered_block()
                                 .ok_or(Error::UnmatchedUnion)?
                                 .verify()?,
                             reader::SyncPayload::NONE => return Err(Error::UnmatchedUnion),
@@ -1791,7 +1837,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1838,7 +1886,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1891,7 +1941,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -1990,7 +2042,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
@@ -2069,7 +2123,9 @@ pub mod ckb {
 
                 for i in 0..vtab.num_fields() {
                     let voffset = vtab.get_field(i) as usize;
-                    if voffset < flatbuffers::SIZE_SOFFSET || voffset >= object_inline_num_bytes {
+                    if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                        || voffset >= object_inline_num_bytes
+                    {
                         return Err(Error::OutOfBounds);
                     }
                 }
