@@ -46,6 +46,7 @@ pub fn try_follow_uoffset(buf: &[u8], offset_loc: usize) -> result::Result<usize
     try_read_uoffset(buf, offset_loc).map(|offset| offset_loc + offset)
 }
 
+#[allow(dead_code)]
 pub struct StringVerifier<'a> {
     buf: &'a [u8],
     loc: usize,
@@ -75,6 +76,7 @@ impl<'a> Verify for StringVerifier<'a> {
     }
 }
 
+#[allow(dead_code)]
 pub struct VectorVerifier<'a> {
     buf: &'a [u8],
     loc: usize,
