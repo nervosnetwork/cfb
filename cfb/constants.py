@@ -52,3 +52,17 @@ BASE_TYPE_DEFAULT = dict([
     (BaseType.Float, '0f32'),
     (BaseType.Double, '0f64'),
 ])
+
+RESERVED_KEYWORDS = {
+    'type': 'type_',
+    'u8': 'u8_',
+    'u16': 'u16_',
+    'u32': 'u32_',
+    'u64': 'u64_',
+    'i8': 'i8_',
+    'i16': 'i16_',
+    'i32': 'i32_',
+    'i64': 'i64_',
+    'f32': 'f32_',
+    'f64': 'f64_',
+}

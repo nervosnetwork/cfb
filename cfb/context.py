@@ -1,11 +1,15 @@
+import re
 from cfb.namespace import Namespace
 from cfb.reflection.BaseType import BaseType
-from cfb.constants import SIZE_OF_UOFFSET, BASE_TYPE_SIZE, BASE_TYPE_RUST_TYPE, BASE_TYPE_DEFAULT
+from cfb.constants import SIZE_OF_UOFFSET, BASE_TYPE_SIZE, BASE_TYPE_RUST_TYPE, BASE_TYPE_DEFAULT, RESERVED_KEYWORDS
 from cfb.struct import struct_padded_fields
 
+FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
+ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 class Context(object):
-    def __init__(self, schema):
+    def __init__(self, basename, schema):
+        self.basename = basename
         self.schema = schema
         self.root = Namespace.from_schema(schema)
 
@@ -100,41 +104,46 @@ class Context(object):
     def rust_type(self, cfb_type):
         return BASE_TYPE_RUST_TYPE[cfb_type]
 
-    def field_size(self, field):
-        base_type = field.Type().BaseType()
-        if base_type == BaseType.Obj:
-            obj = self.schema.Objects(field.Type().Index())
+    def type_size(self, cfb_type, index):
+        if cfb_type == BaseType.Obj:
+            obj = self.schema.Objects(index)
             if obj.IsStruct():
                 return obj.Bytesize()
 
             return SIZE_OF_UOFFSET
 
-        return BASE_TYPE_SIZE[field.Type().BaseType()]
+        return BASE_TYPE_SIZE[cfb_type]
+
+    def type_alignment(self, cfb_type, index):
+        if cfb_type == BaseType.Obj:
+            obj = self.schema.Objects(index)
+            if obj.IsStruct():
+                return obj.Minalign()
+
+            return SIZE_OF_UOFFSET
+
+        return BASE_TYPE_SIZE[cfb_type]
+
+    def field_size(self, field):
+        ty = field.Type()
+        return self.type_size(ty.BaseType(), ty.Index())
 
     def field_alignment(self, field):
-        base_type = field.Type().BaseType()
-        if base_type == BaseType.Obj:
-            obj = self.schema.Objects(field.Type().Index())
-            if obj.IsStruct():
-                return obj.Minalign()
-
-            return SIZE_OF_UOFFSET
-
-        return BASE_TYPE_SIZE[base_type]
+        ty = field.Type()
+        return self.type_alignment(ty.BaseType(), ty.Index())
 
     def table_alignment(self, table):
-        return max(self.field_alignment(table.Fields(i)) for i in range(table.FieldsLength()))
+        if table.FieldsLength() > 0:
+            return max(self.field_alignment(table.Fields(i)) for i in range(table.FieldsLength()))
+        return SIZE_OF_UOFFSET
+
+    def element_size(self, field):
+        ty = field.Type()
+        return self.type_size(ty.Element(), ty.Index())
 
     def element_aligment(self, field):
-        element = field.Type().Element()
-        if element == BaseType.Obj:
-            obj = self.schema.Objects(field.Type().Index())
-            if obj.IsStruct():
-                return obj.Minalign()
-
-            return SIZE_OF_UOFFSET
-
-        return BASE_TYPE_SIZE[element]
+        ty = field.Type()
+        return self.type_alignment(ty.Element(), ty.Index())
 
     def full_name(self, object):
         return object.Name().decode('utf-8').replace('.', '::')
@@ -143,7 +152,7 @@ class Context(object):
         return object.Name().decode('utf-8').split('.')[-1]
 
     def field_name(self, field):
-        return field.Name().decode('utf-8')
+        return self.safe_name(field.Name().decode('utf-8'))
 
     def field_union_enum(self, field):
         return self.schema.Enums(field.Type().Index())
@@ -197,3 +206,10 @@ class Context(object):
 
     def fields_sorted_by_offset(self, object):
         return list(sorted((object.Fields(i) for i in range(object.FieldsLength())), key=lambda f: f.Offset()))
+
+    def camel_to_snake(_self, name):
+        s1 = FIRST_CAP_RE.sub(r'\1_\2', name)
+        return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
+
+    def safe_name(_self, name):
+        return RESERVED_KEYWORDS.get(name, name)

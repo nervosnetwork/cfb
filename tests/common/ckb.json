@@ -1,0 +1,1695 @@
+{
+  "objects": [
+    {
+      "name": "Ckb.Protocol.AddFilter",
+      "fields": [
+        {
+          "name": "filter",
+          "type": {
+            "base_type": "Vector",
+            "element": "UByte"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.Block",
+      "fields": [
+        {
+          "name": "commit_transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 27
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "header",
+          "type": {
+            "base_type": "Obj",
+            "index": 15
+          },
+          "offset": 4
+        },
+        {
+          "name": "proposal_transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 20
+          },
+          "id": 3,
+          "offset": 10
+        },
+        {
+          "name": "uncles",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 28
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.BlockProposal",
+      "fields": [
+        {
+          "name": "transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 27
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.BlockTransactions",
+      "fields": [
+        {
+          "name": "hash",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "offset": 4
+        },
+        {
+          "name": "transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 27
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.Bytes",
+      "fields": [
+        {
+          "name": "seq",
+          "type": {
+            "base_type": "Vector",
+            "element": "UByte"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.CellInput",
+      "fields": [
+        {
+          "name": "args",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 4
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "hash",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "offset": 4
+        },
+        {
+          "name": "index",
+          "type": {
+            "base_type": "UInt"
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.CellOutput",
+      "fields": [
+        {
+          "name": "capacity",
+          "type": {
+            "base_type": "ULong"
+          },
+          "offset": 4
+        },
+        {
+          "name": "data",
+          "type": {
+            "base_type": "Obj",
+            "index": 4
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "lock",
+          "type": {
+            "base_type": "Obj",
+            "index": 22
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "type",
+          "type": {
+            "base_type": "Obj",
+            "index": 22
+          },
+          "id": 3,
+          "offset": 10
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.ClearFilter",
+      "fields": [
+
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.CompactBlock",
+      "fields": [
+        {
+          "name": "header",
+          "type": {
+            "base_type": "Obj",
+            "index": 15
+          },
+          "offset": 4
+        },
+        {
+          "name": "nonce",
+          "type": {
+            "base_type": "ULong"
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "prefilled_transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 17
+          },
+          "id": 3,
+          "offset": 10
+        },
+        {
+          "name": "proposal_transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 20
+          },
+          "id": 5,
+          "offset": 14
+        },
+        {
+          "name": "short_ids",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 4
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "uncles",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 28
+          },
+          "id": 4,
+          "offset": 12
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.FilteredBlock",
+      "fields": [
+        {
+          "name": "header",
+          "type": {
+            "base_type": "Obj",
+            "index": 15
+          },
+          "offset": 4
+        },
+        {
+          "name": "proof",
+          "type": {
+            "base_type": "Obj",
+            "index": 18
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 27
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.GetBlockProposal",
+      "fields": [
+        {
+          "name": "block_number",
+          "type": {
+            "base_type": "ULong"
+          },
+          "offset": 4
+        },
+        {
+          "name": "proposal_transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 20
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.GetBlockTransactions",
+      "fields": [
+        {
+          "name": "hash",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "offset": 4
+        },
+        {
+          "name": "indexes",
+          "type": {
+            "base_type": "Vector",
+            "element": "UInt"
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.GetBlocks",
+      "fields": [
+        {
+          "name": "block_hashes",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 14
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.GetHeaders",
+      "fields": [
+        {
+          "name": "block_locator_hashes",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 14
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "hash_stop",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "version",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.H256",
+      "fields": [
+        {
+          "name": "u0",
+          "type": {
+            "base_type": "UByte"
+          }
+        },
+        {
+          "name": "u1",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 1,
+          "offset": 1
+        },
+        {
+          "name": "u10",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 10,
+          "offset": 10
+        },
+        {
+          "name": "u11",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 11,
+          "offset": 11
+        },
+        {
+          "name": "u12",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 12,
+          "offset": 12
+        },
+        {
+          "name": "u13",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 13,
+          "offset": 13
+        },
+        {
+          "name": "u14",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 14,
+          "offset": 14
+        },
+        {
+          "name": "u15",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 15,
+          "offset": 15
+        },
+        {
+          "name": "u16",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 16,
+          "offset": 16
+        },
+        {
+          "name": "u17",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 17,
+          "offset": 17
+        },
+        {
+          "name": "u18",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 18,
+          "offset": 18
+        },
+        {
+          "name": "u19",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 19,
+          "offset": 19
+        },
+        {
+          "name": "u2",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 2,
+          "offset": 2
+        },
+        {
+          "name": "u20",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 20,
+          "offset": 20
+        },
+        {
+          "name": "u21",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 21,
+          "offset": 21
+        },
+        {
+          "name": "u22",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 22,
+          "offset": 22
+        },
+        {
+          "name": "u23",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 23,
+          "offset": 23
+        },
+        {
+          "name": "u24",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 24,
+          "offset": 24
+        },
+        {
+          "name": "u25",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 25,
+          "offset": 25
+        },
+        {
+          "name": "u26",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 26,
+          "offset": 26
+        },
+        {
+          "name": "u27",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 27,
+          "offset": 27
+        },
+        {
+          "name": "u28",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 28,
+          "offset": 28
+        },
+        {
+          "name": "u29",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 29,
+          "offset": 29
+        },
+        {
+          "name": "u3",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 3,
+          "offset": 3
+        },
+        {
+          "name": "u30",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 30,
+          "offset": 30
+        },
+        {
+          "name": "u31",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 31,
+          "offset": 31
+        },
+        {
+          "name": "u4",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 4,
+          "offset": 4
+        },
+        {
+          "name": "u5",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 5,
+          "offset": 5
+        },
+        {
+          "name": "u6",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 6,
+          "offset": 6
+        },
+        {
+          "name": "u7",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 7,
+          "offset": 7
+        },
+        {
+          "name": "u8",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 8,
+          "offset": 8
+        },
+        {
+          "name": "u9",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 9,
+          "offset": 9
+        }
+      ],
+      "is_struct": true,
+      "minalign": 1,
+      "bytesize": 32
+    },
+    {
+      "name": "Ckb.Protocol.Header",
+      "fields": [
+        {
+          "name": "cellbase_id",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "id": 9,
+          "offset": 22
+        },
+        {
+          "name": "difficulty",
+          "type": {
+            "base_type": "Obj",
+            "index": 4
+          },
+          "id": 6,
+          "offset": 16
+        },
+        {
+          "name": "nonce",
+          "type": {
+            "base_type": "ULong"
+          },
+          "id": 7,
+          "offset": 18
+        },
+        {
+          "name": "number",
+          "type": {
+            "base_type": "ULong"
+          },
+          "id": 3,
+          "offset": 10
+        },
+        {
+          "name": "parent_hash",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "proof",
+          "type": {
+            "base_type": "Obj",
+            "index": 4
+          },
+          "id": 8,
+          "offset": 20
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "base_type": "ULong"
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "txs_commit",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "id": 4,
+          "offset": 12
+        },
+        {
+          "name": "txs_proposal",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "id": 5,
+          "offset": 14
+        },
+        {
+          "name": "uncles_count",
+          "type": {
+            "base_type": "UInt"
+          },
+          "id": 11,
+          "offset": 26
+        },
+        {
+          "name": "uncles_hash",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "id": 10,
+          "offset": 24
+        },
+        {
+          "name": "version",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.Headers",
+      "fields": [
+        {
+          "name": "headers",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 15
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.IndexTransaction",
+      "fields": [
+        {
+          "name": "index",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        },
+        {
+          "name": "transaction",
+          "type": {
+            "base_type": "Obj",
+            "index": 27
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.MerkleProof",
+      "fields": [
+        {
+          "name": "indices",
+          "type": {
+            "base_type": "Vector",
+            "element": "UInt"
+          },
+          "offset": 4
+        },
+        {
+          "name": "lemmas",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 14
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.OutPoint",
+      "fields": [
+        {
+          "name": "hash",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "offset": 4
+        },
+        {
+          "name": "index",
+          "type": {
+            "base_type": "UInt"
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.ProposalShortId",
+      "fields": [
+        {
+          "name": "u0",
+          "type": {
+            "base_type": "UByte"
+          }
+        },
+        {
+          "name": "u1",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 1,
+          "offset": 1
+        },
+        {
+          "name": "u2",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 2,
+          "offset": 2
+        },
+        {
+          "name": "u3",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 3,
+          "offset": 3
+        },
+        {
+          "name": "u4",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 4,
+          "offset": 4
+        },
+        {
+          "name": "u5",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 5,
+          "offset": 5
+        },
+        {
+          "name": "u6",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 6,
+          "offset": 6
+        },
+        {
+          "name": "u7",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 7,
+          "offset": 7
+        },
+        {
+          "name": "u8",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 8,
+          "offset": 8
+        },
+        {
+          "name": "u9",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 9,
+          "offset": 9
+        }
+      ],
+      "is_struct": true,
+      "minalign": 1,
+      "bytesize": 10
+    },
+    {
+      "name": "Ckb.Protocol.RelayMessage",
+      "fields": [
+        {
+          "name": "payload",
+          "type": {
+            "base_type": "Union",
+            "index": 0
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "payload_type",
+          "type": {
+            "base_type": "UType",
+            "index": 0
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.Script",
+      "fields": [
+        {
+          "name": "args",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 4
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "binary_hash",
+          "type": {
+            "base_type": "Obj",
+            "index": 14
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "version",
+          "type": {
+            "base_type": "UByte"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.SetFilter",
+      "fields": [
+        {
+          "name": "filter",
+          "type": {
+            "base_type": "Vector",
+            "element": "UByte"
+          },
+          "offset": 4
+        },
+        {
+          "name": "hash_seed",
+          "type": {
+            "base_type": "UInt"
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "num_hashes",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.SyncMessage",
+      "fields": [
+        {
+          "name": "payload",
+          "type": {
+            "base_type": "Union",
+            "index": 1
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "payload_type",
+          "type": {
+            "base_type": "UType",
+            "index": 1
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.Time",
+      "fields": [
+        {
+          "name": "timestamp",
+          "type": {
+            "base_type": "ULong"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.TimeMessage",
+      "fields": [
+        {
+          "name": "payload",
+          "type": {
+            "base_type": "Obj",
+            "index": 25
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.Transaction",
+      "fields": [
+        {
+          "name": "deps",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 19
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "embeds",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 4
+          },
+          "id": 4,
+          "offset": 12
+        },
+        {
+          "name": "inputs",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 5
+          },
+          "id": 2,
+          "offset": 8
+        },
+        {
+          "name": "outputs",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 6
+          },
+          "id": 3,
+          "offset": 10
+        },
+        {
+          "name": "version",
+          "type": {
+            "base_type": "UInt"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.UncleBlock",
+      "fields": [
+        {
+          "name": "cellbase",
+          "type": {
+            "base_type": "Obj",
+            "index": 27
+          },
+          "id": 1,
+          "offset": 6
+        },
+        {
+          "name": "header",
+          "type": {
+            "base_type": "Obj",
+            "index": 15
+          },
+          "offset": 4
+        },
+        {
+          "name": "proposal_transactions",
+          "type": {
+            "base_type": "Vector",
+            "element": "Obj",
+            "index": 20
+          },
+          "id": 2,
+          "offset": 8
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Ckb.Protocol.ValidTransaction",
+      "fields": [
+        {
+          "name": "cycles",
+          "type": {
+            "base_type": "ULong"
+          },
+          "offset": 4
+        },
+        {
+          "name": "transaction",
+          "type": {
+            "base_type": "Obj",
+            "index": 27
+          },
+          "id": 1,
+          "offset": 6
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+    {
+      "name": "Ckb.Protocol.RelayPayload",
+      "values": [
+        {
+          "name": "NONE",
+          "union_type": {
+          }
+        },
+        {
+          "name": "CompactBlock",
+          "value": 1,
+          "object": {
+            "name": "Ckb.Protocol.CompactBlock",
+            "fields": [
+              {
+                "name": "header",
+                "type": {
+                  "base_type": "Obj",
+                  "index": 15
+                },
+                "offset": 4
+              },
+              {
+                "name": "nonce",
+                "type": {
+                  "base_type": "ULong"
+                },
+                "id": 1,
+                "offset": 6
+              },
+              {
+                "name": "prefilled_transactions",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 17
+                },
+                "id": 3,
+                "offset": 10
+              },
+              {
+                "name": "proposal_transactions",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 20
+                },
+                "id": 5,
+                "offset": 14
+              },
+              {
+                "name": "short_ids",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 4
+                },
+                "id": 2,
+                "offset": 8
+              },
+              {
+                "name": "uncles",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 28
+                },
+                "id": 4,
+                "offset": 12
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 8
+          }
+        },
+        {
+          "name": "ValidTransaction",
+          "value": 2,
+          "object": {
+            "name": "Ckb.Protocol.ValidTransaction",
+            "fields": [
+              {
+                "name": "cycles",
+                "type": {
+                  "base_type": "ULong"
+                },
+                "offset": 4
+              },
+              {
+                "name": "transaction",
+                "type": {
+                  "base_type": "Obj",
+                  "index": 27
+                },
+                "id": 1,
+                "offset": 6
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 29
+          }
+        },
+        {
+          "name": "GetBlockTransactions",
+          "value": 3,
+          "object": {
+            "name": "Ckb.Protocol.GetBlockTransactions",
+            "fields": [
+              {
+                "name": "hash",
+                "type": {
+                  "base_type": "Obj",
+                  "index": 14
+                },
+                "offset": 4
+              },
+              {
+                "name": "indexes",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "UInt"
+                },
+                "id": 1,
+                "offset": 6
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 11
+          }
+        },
+        {
+          "name": "BlockTransactions",
+          "value": 4,
+          "object": {
+            "name": "Ckb.Protocol.BlockTransactions",
+            "fields": [
+              {
+                "name": "hash",
+                "type": {
+                  "base_type": "Obj",
+                  "index": 14
+                },
+                "offset": 4
+              },
+              {
+                "name": "transactions",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 27
+                },
+                "id": 1,
+                "offset": 6
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 3
+          }
+        },
+        {
+          "name": "GetBlockProposal",
+          "value": 5,
+          "object": {
+            "name": "Ckb.Protocol.GetBlockProposal",
+            "fields": [
+              {
+                "name": "block_number",
+                "type": {
+                  "base_type": "ULong"
+                },
+                "offset": 4
+              },
+              {
+                "name": "proposal_transactions",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 20
+                },
+                "id": 1,
+                "offset": 6
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 10
+          }
+        },
+        {
+          "name": "BlockProposal",
+          "value": 6,
+          "object": {
+            "name": "Ckb.Protocol.BlockProposal",
+            "fields": [
+              {
+                "name": "transactions",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 27
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 2
+          }
+        }
+      ],
+      "is_union": true,
+      "underlying_type": {
+        "base_type": "UType",
+        "index": 0
+      }
+    },
+    {
+      "name": "Ckb.Protocol.SyncPayload",
+      "values": [
+        {
+          "name": "NONE",
+          "union_type": {
+          }
+        },
+        {
+          "name": "GetHeaders",
+          "value": 1,
+          "object": {
+            "name": "Ckb.Protocol.GetHeaders",
+            "fields": [
+              {
+                "name": "block_locator_hashes",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 14
+                },
+                "id": 1,
+                "offset": 6
+              },
+              {
+                "name": "hash_stop",
+                "type": {
+                  "base_type": "Obj",
+                  "index": 14
+                },
+                "id": 2,
+                "offset": 8
+              },
+              {
+                "name": "version",
+                "type": {
+                  "base_type": "UInt"
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 13
+          }
+        },
+        {
+          "name": "Headers",
+          "value": 2,
+          "object": {
+            "name": "Ckb.Protocol.Headers",
+            "fields": [
+              {
+                "name": "headers",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 15
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 16
+          }
+        },
+        {
+          "name": "GetBlocks",
+          "value": 3,
+          "object": {
+            "name": "Ckb.Protocol.GetBlocks",
+            "fields": [
+              {
+                "name": "block_hashes",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 14
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 12
+          }
+        },
+        {
+          "name": "Block",
+          "value": 4,
+          "object": {
+            "name": "Ckb.Protocol.Block",
+            "fields": [
+              {
+                "name": "commit_transactions",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 27
+                },
+                "id": 2,
+                "offset": 8
+              },
+              {
+                "name": "header",
+                "type": {
+                  "base_type": "Obj",
+                  "index": 15
+                },
+                "offset": 4
+              },
+              {
+                "name": "proposal_transactions",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 20
+                },
+                "id": 3,
+                "offset": 10
+              },
+              {
+                "name": "uncles",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 28
+                },
+                "id": 1,
+                "offset": 6
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 1
+          }
+        },
+        {
+          "name": "SetFilter",
+          "value": 5,
+          "object": {
+            "name": "Ckb.Protocol.SetFilter",
+            "fields": [
+              {
+                "name": "filter",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "UByte"
+                },
+                "offset": 4
+              },
+              {
+                "name": "hash_seed",
+                "type": {
+                  "base_type": "UInt"
+                },
+                "id": 2,
+                "offset": 8
+              },
+              {
+                "name": "num_hashes",
+                "type": {
+                  "base_type": "UByte"
+                },
+                "id": 1,
+                "offset": 6
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 23
+          }
+        },
+        {
+          "name": "AddFilter",
+          "value": 6,
+          "object": {
+            "name": "Ckb.Protocol.AddFilter",
+            "fields": [
+              {
+                "name": "filter",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "UByte"
+                },
+                "offset": 4
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 0
+          }
+        },
+        {
+          "name": "ClearFilter",
+          "value": 7,
+          "object": {
+            "name": "Ckb.Protocol.ClearFilter",
+            "fields": [
+
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 7
+          }
+        },
+        {
+          "name": "FilteredBlock",
+          "value": 8,
+          "object": {
+            "name": "Ckb.Protocol.FilteredBlock",
+            "fields": [
+              {
+                "name": "header",
+                "type": {
+                  "base_type": "Obj",
+                  "index": 15
+                },
+                "offset": 4
+              },
+              {
+                "name": "proof",
+                "type": {
+                  "base_type": "Obj",
+                  "index": 18
+                },
+                "id": 2,
+                "offset": 8
+              },
+              {
+                "name": "transactions",
+                "type": {
+                  "base_type": "Vector",
+                  "element": "Obj",
+                  "index": 27
+                },
+                "id": 1,
+                "offset": 6
+              }
+            ],
+            "minalign": 1
+          },
+          "union_type": {
+            "base_type": "Obj",
+            "index": 9
+          }
+        }
+      ],
+      "is_union": true,
+      "underlying_type": {
+        "base_type": "UType",
+        "index": 1
+      }
+    }
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "root_table": {
+    "name": "Ckb.Protocol.SyncMessage",
+    "fields": [
+      {
+        "name": "payload",
+        "type": {
+          "base_type": "Union",
+          "index": 1
+        },
+        "id": 1,
+        "offset": 6
+      },
+      {
+        "name": "payload_type",
+        "type": {
+          "base_type": "UType",
+          "index": 1
+        },
+        "offset": 4
+      }
+    ],
+    "minalign": 1
+  },
+  "services": [
+
+  ]
+}

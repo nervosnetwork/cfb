@@ -1,0 +1,113 @@
+{%- if mod.has_definitions() %}
+  {%- for name, object in mod.objects.items() %}
+    {%- if not object.IsStruct() %}
+
+impl<'a> Verify for reader::{{ name }}<'a> {
+    fn verify(&self) -> Result {
+        let tab = self._tab;
+        let buf = tab.buf;
+        let buf_len = buf.len();
+
+        if tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+
+        let vtab_loc = {
+            let soffset_slice = &buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
+            let soffset = flatbuffers::read_scalar::<flatbuffers::SOffsetT>(soffset_slice);
+            (tab.loc as flatbuffers::SOffsetT - soffset) as usize
+        };
+        if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+
+        let vtab = tab.vtable();
+        let vtab_num_bytes = vtab.num_bytes();
+        if vtab_loc + vtab_num_bytes > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+        let object_inline_num_bytes = vtab.object_inline_num_bytes();
+        if tab.loc + object_inline_num_bytes > buf_len {
+            return Err(Error::OutOfBounds);
+        }
+
+        for i in 0..vtab.num_fields() {
+            let voffset = vtab.get_field(i) as usize;
+            if (voffset > 0 && voffset < flatbuffers::SIZE_SOFFSET)
+                || voffset >= object_inline_num_bytes
+            {
+                return Err(Error::OutOfBounds);
+            }
+        }
+      {%- for field in cfb.fields_sorted_by_offset(object) %}
+
+        if Self::VT_{{ cfb.field_name(field) | upper }} as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+            let voffset = vtab.get(Self::VT_{{ cfb.field_name(field) | upper }}) as usize;
+        {%- if cfb.is_table(field) or cfb.is_string(field) or cfb.is_vector(field) or cfb.is_union(field) %}
+            if voffset > 0 {
+                if voffset + {{ cfb.field_size(field) }} > object_inline_num_bytes {
+                    return Err(Error::OutOfBounds);
+                }
+          {%- if cfb.is_table(field) %}
+
+                if let Some(f) = self.{{ cfb.field_name(field) }}() {
+                    f.verify()?;
+                }
+          {%- elif cfb.is_string(field) %}
+
+                StringVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?).verify()?;
+          {%- elif cfb.is_vector(field) %}
+
+                let {{ cfb.field_name(field) }}_verifier =
+                    VectorVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?);
+            {%- if cfb.is_element_string(field) %}
+                {{ cfb.field_name(field) }}_verifier.verify_reference_elements::<StringVerifier>()?;
+            {%- elif cfb.is_element_table(field) %}
+                {{ cfb.field_name(field) }}_verifier.verify_reference_elements::<reader::{{ cfb.base_name(cfb.schema.Objects(field.Type().Index())) }}>()?;
+            {%- else %}
+                {{ cfb.field_name(field) }}_verifier.verify_scalar_elements({{ cfb.element_size(field) }})?;
+            {%- endif %}
+          {%- elif cfb.is_union(field) %}
+            {%- set enum = cfb.schema.Enums(field.Type().Index()) %}
+
+                match self.{{ cfb.field_name(field) }}_type() {
+            {%- for v in cfb.enum_values(enum) %}
+              {%- if v.Name().decode('utf-8') != 'NONE' %}
+                    reader::{{ cfb.base_name(enum) }}::{{ v.Name().decode('utf-8') }} => self
+                        .{{ cfb.field_name(field) }}_as_{{ cfb.camel_to_snake(v.Name().decode('utf-8')) }}()
+                        .ok_or(Error::UnmatchedUnion)?
+                        .verify()?,
+              {%- endif %}
+            {%- endfor %}
+                    reader::{{ cfb.base_name(enum) }}::NONE => return Err(Error::UnmatchedUnion),
+                }
+          {%- endif %}
+            }
+        {%- else %}
+            if voffset > 0 && voffset + {{ cfb.field_size(field) }} > object_inline_num_bytes {
+                return Err(Error::OutOfBounds);
+            }
+        {%- endif %}
+        }
+      {%- endfor %}
+
+        Ok(())
+    }
+}
+    {%- endif %}
+  {%- endfor %}
+{%- endif %}
+
+{%- for name, mod in mod.children.items() %}
+  {%- set mod_content %}
+    {%- include "_legacy_verifier_mod.rs.jinja" %}
+  {%- endset %}
+pub mod {{ cfb.camel_to_snake(name) }} {
+    #![allow(unused_imports)]
+
+    use super::reader::{{ cfb.camel_to_snake(name) }} as reader;
+    pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
+    use flatbuffers::{self, Follow};
+    {{- mod_content | indent }}
+}
+{% endfor %}

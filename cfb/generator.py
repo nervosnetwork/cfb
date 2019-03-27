@@ -12,7 +12,7 @@ class Generator(object):
         with open(bfbs_path, 'rb') as bfbs_file:
             buf = bytearray(bfbs_file.read())
             schema = Schema.GetRootAsSchema(buf, 0)
-            self.context = Context(schema)
+            self.context = Context(self.basename, schema)
 
     def generate(self, outdir=None):
         outdir = outdir or self.outdir
@@ -24,3 +24,8 @@ class Generator(object):
         builder_content = builder.render(cfb=self.context)
         with open(path.join(outdir, self.basename + '_builder.rs'), 'w') as out_file:
             out_file.write(builder_content)
+
+        legacy_verifier = env.get_template('legacy_verifier.rs.jinja')
+        legacy_verifier_content = legacy_verifier.render(cfb=self.context)
+        with open(path.join(outdir, self.basename + '_generated_verifier.rs'), 'w') as out_file:
+            out_file.write(legacy_verifier_content)

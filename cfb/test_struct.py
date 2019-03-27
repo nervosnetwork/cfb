@@ -13,7 +13,7 @@ class TestStruct(TestCase):
             buf = bytearray(bfbs_file.read())
             schema = Schema.GetRootAsSchema(buf, 0)
 
-        fields = struct_padded_fields(Context(schema), schema.Objects(1))
+        fields = struct_padded_fields(Context("struct", schema), schema.Objects(1))
 
         self.assertEqual(3, len(fields))
         self.assertEqual(b'x', fields[0].field.Name())

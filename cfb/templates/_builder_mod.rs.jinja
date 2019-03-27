@@ -1,5 +1,5 @@
 {%- if mod.has_definitions() -%}
-#![allow(unused_imports)]
+#![allow(unused_imports, clippy::large_enum_variant)]
 
 use cfb::builder::{
     Builder, Component, DesignatedComponent, NestedBufferComponent, ReferenceVectorComponent,
@@ -147,7 +147,7 @@ impl {{ name }} {
 impl<'c> Component<'c> for {{ name }} {
     fn build(self: Box<Self>, builder: &mut Builder<'c>) -> usize {
         let vtable_start = {
-            let mut vtable = builder.start_vtable();
+            let {% if object.FieldsLength() > 0 %}mut {% endif %}vtable = builder.start_vtable();
             {%- for field in cfb.fields_sorted_by_alignement(object): %}
             if {{ cfb.field_present(field) }} {
                 vtable.add_field(Self::VT_{{ cfb.field_name(field) | upper }}, Self::SIZE_{{ cfb.field_name(field) | upper }}, Self::ALIGNMENT_{{ cfb.field_name(field) | upper }});
@@ -244,7 +244,7 @@ impl<'c> Component<'c> for {{ name }} {
 {% set mod_content %}
   {%- include "_builder_mod.rs.jinja" -%}
 {% endset -%}
-pub mod {{ name }} {
+pub mod {{ cfb.camel_to_snake(name) }} {
     {{ mod_content | indent }}
 }
 {% endfor %}
