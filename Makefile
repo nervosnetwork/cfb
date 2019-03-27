@@ -24,6 +24,12 @@ gen-clean:
 	rm -f ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
 gen-force: gen-clean gen
 
+publish-python:
+	rm -rf dist
+	${PIPENV_RUN} python setup.py sdist bdist_wheel
+	twine --version || ${PIPENV_RUN} pip install twine
+	twine upload dist/*
+
 doc:
 	cargo doc
 
@@ -73,3 +79,4 @@ ci-python: test-python ci-gen-clean ci-gen
 .PHONY: doc doc-clean doc-publish
 .PHONY: fmt clippy
 .PHONY: ci ci-rust ci-python ci-gen ci-gen-clean
+.PHONY: publish-python

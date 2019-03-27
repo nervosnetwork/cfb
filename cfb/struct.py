@@ -1,3 +1,6 @@
+# foo
+
+
 class StructPadding(object):
     def __init__(self, index, ty):
         self.index = index

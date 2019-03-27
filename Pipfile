@@ -4,8 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-cfbc = {editable = true,path = "."}
+cfbc = { editable = true, path = "." }
 
 [dev-packages]
-flatbuffers = "*"
 mock = "==1.0.1"

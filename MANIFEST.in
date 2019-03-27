@@ -1,0 +1,3 @@
+include LICENSE README.md
+global-exclude *.py[co]
+graft cfb/templates
