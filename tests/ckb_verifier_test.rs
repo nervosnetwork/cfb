@@ -337,14 +337,15 @@ impl Script {
         g::Script::create(
             builder,
             &g::ScriptArgs {
+                args,
                 version: self.version,
                 binary_hash: self.binary_hash.map(Into::into).as_ref(),
-                args: args,
             },
         )
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone)]
 enum SyncMessage {
     NONE,
@@ -515,7 +516,7 @@ fn walk(buf: &[u8]) -> Result<(), Error> {
     }
 }
 
-fn walk_header<'a>(header: g::Header<'a>) {
+fn walk_header(header: g::Header) {
     dbg!(header.version());
     header.parent_hash();
     header.timestamp();
@@ -530,7 +531,7 @@ fn walk_header<'a>(header: g::Header<'a>) {
     header.uncles_count();
 }
 
-fn walk_uncle_block<'a>(uncle_block: g::UncleBlock<'a>) {
+fn walk_uncle_block(uncle_block: g::UncleBlock) {
     if let Some(header) = uncle_block.header() {
         walk_header(header);
     }
@@ -544,20 +545,18 @@ fn walk_uncle_block<'a>(uncle_block: g::UncleBlock<'a>) {
     }
 }
 
-fn walk_bytes<'a>(bytes: g::Bytes<'a>) {
+fn walk_bytes(bytes: g::Bytes) {
     if let Some(seq) = bytes.seq() {
-        for i in 0..dbg!(seq.len()) {
-            let _ = seq[i];
-        }
+        seq.to_vec();
     }
 }
 
-fn walk_out_point<'a>(out_point: g::OutPoint<'a>) {
+fn walk_out_point(out_point: g::OutPoint) {
     out_point.hash();
     out_point.index();
 }
 
-fn walk_script<'a>(script: g::Script<'a>) {
+fn walk_script(script: g::Script) {
     script.version();
     if let Some(args) = script.args() {
         for i in 0..dbg!(args.len()) {
@@ -567,7 +566,7 @@ fn walk_script<'a>(script: g::Script<'a>) {
     script.binary_hash();
 }
 
-fn walk_transaction<'a>(transaction: g::Transaction<'a>) {
+fn walk_transaction(transaction: g::Transaction) {
     dbg!(transaction.version());
     if let Some(deps) = transaction.deps() {
         for i in 0..dbg!(deps.len()) {
@@ -609,7 +608,7 @@ fn walk_transaction<'a>(transaction: g::Transaction<'a>) {
     }
 }
 
-fn walk_proof<'a>(proof: g::MerkleProof<'a>) {
+fn walk_proof(proof: g::MerkleProof) {
     if let Some(indices) = proof.indices() {
         for i in 0..dbg!(indices.len()) {
             let _ = indices.get(i);
@@ -649,9 +648,7 @@ fn walk_inner(buf: &[u8]) -> Result<(), Error> {
                 .payload_as_get_blocks()
                 .ok_or(Error::UnmatchedUnion)?;
             if let Some(hashes) = m.block_hashes() {
-                for i in 0..dbg!(hashes.len()) {
-                    let _ = hashes[i];
-                }
+                hashes.to_vec();
             }
         }
         g::SyncPayload::Block => {
@@ -672,9 +669,7 @@ fn walk_inner(buf: &[u8]) -> Result<(), Error> {
                 }
             }
             if let Some(proposal_transactions) = m.proposal_transactions() {
-                for i in 0..dbg!(proposal_transactions.len()) {
-                    let _ = proposal_transactions[i];
-                }
+                proposal_transactions.to_vec();
             }
         }
         g::SyncPayload::SetFilter => {
@@ -682,9 +677,7 @@ fn walk_inner(buf: &[u8]) -> Result<(), Error> {
                 .payload_as_set_filter()
                 .ok_or(Error::UnmatchedUnion)?;
             if let Some(filter) = m.filter() {
-                for i in 0..dbg!(filter.len()) {
-                    let _ = filter[i];
-                }
+                filter.to_vec();
             }
             m.num_hashes();
             m.hash_seed();
@@ -694,9 +687,7 @@ fn walk_inner(buf: &[u8]) -> Result<(), Error> {
                 .payload_as_add_filter()
                 .ok_or(Error::UnmatchedUnion)?;
             if let Some(filter) = m.filter() {
-                for i in 0..dbg!(filter.len()) {
-                    let _ = filter[i];
-                }
+                filter.to_vec();
             }
         }
         g::SyncPayload::ClearFilter => {
