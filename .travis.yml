@@ -37,6 +37,16 @@ matrix:
         - pip install pipenv
         - pipenv install --dev
       script:
+        - pipenv run python --version
+        - make ci-python
+    - name: Python (2.7)
+      language: python
+      python: '2.7'
+      install:
+        - pip install pipenv
+        - pipenv install --dev
+      script:
+        - pipenv run python --version
         - make ci-python
 
 before_cache:
