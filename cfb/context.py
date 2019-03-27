@@ -4,8 +4,8 @@ from cfb.reflection.BaseType import BaseType
 from cfb.constants import SIZE_OF_UOFFSET, BASE_TYPE_SIZE, BASE_TYPE_RUST_TYPE, BASE_TYPE_DEFAULT, RESERVED_KEYWORDS
 from cfb.struct import struct_padded_fields
 
-FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
-ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
+CAMEL_TO_SNAKE_RE = re.compile(r'(?<=[a-z])[A-Z]|[A-Z](?=[^A-Z])')
+
 
 class Context(object):
     def __init__(self, basename, schema):
@@ -208,8 +208,7 @@ class Context(object):
         return list(sorted((object.Fields(i) for i in range(object.FieldsLength())), key=lambda f: f.Offset()))
 
     def camel_to_snake(_self, name):
-        s1 = FIRST_CAP_RE.sub(r'\1_\2', name)
-        return ALL_CAP_RE.sub(r'\1_\2', s1).lower()
+        return CAMEL_TO_SNAKE_RE.sub(r'_\g<0>', name).strip('_').lower()
 
     def safe_name(_self, name):
         return RESERVED_KEYWORDS.get(name, name)
