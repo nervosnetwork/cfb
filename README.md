@@ -9,7 +9,7 @@ CFB (Canonical FlatBuffers) is a restricted variant of FlatBuffers for producing
 Install the code geneartor as commane line utility:
 
 ```
-pip install cfbc
+pip install -U cfbc
 ```
 
 First generate bfbs file from fbs:
