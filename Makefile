@@ -1,10 +1,13 @@
 FLATC := flatc
 
-FBS := $(wildcard tests/common/*.fbs)
-BFBS := $(patsubst %.fbs,%.bfbs,${FBS})
-JSON := $(patsubst %.fbs,%.json,${FBS})
-FLATC_RS := $(patsubst %.fbs,%_generated.rs,${FBS})
-BUILDER := $(patsubst %.fbs,%_builder.rs,${FBS})
+FBS_FILES := $(wildcard tests/common/*.fbs)
+BFBS_FILES := $(patsubst %.fbs,%.bfbs,${FBS_FILES})
+JSON_FILES := $(patsubst %.fbs,%.json,${FBS_FILES})
+FLATC_RUST_FILES := $(patsubst %.fbs,%_generated.rs,${FBS_FILES})
+BUILDER_FILES := $(patsubst %.fbs,%_builder.rs,${FBS_FILES})
+LEGACY_VERIFIER_FILES := $(patsubst %.fbs,%_generated_verifier.rs,${FBS_FILES})
+
+GEN_FILES := ${BFBS_FILES} ${JSON_FILES} ${FLATC_RUST_FILES} ${BUILDER_FILES} ${LEGACY_VERIFIER_FILES}
 
 TEMPLATES := $(wildcard cfb/templates/*.jinja)
 
@@ -19,9 +22,9 @@ test-python:
 test-rust:
 	cargo test ${VERBOSE}
 
-gen: ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
+gen: ${GEN_FILES}
 gen-clean:
-	rm -f ${BFBS} ${JSON} ${FLATC_RS} ${BUILDER}
+	rm -f ${GEN_FILES}
 gen-force: gen-clean gen
 
 publish-python:
@@ -67,12 +70,13 @@ ci: ci-rust ci-python
 ci-rust: fmt clippy test-rust
 	git diff --exit-code Cargo.lock
 
-ci-gen-clean:
-	rm -f ${BUILDER}
-ci-gen: ${BUILDER}
+ci-gen-prepare:
+	rm -f ${BUILDER_FILES} ${LEGACY_VERIFIER_FILES}
+	touch ${BFBS_FILES}
+ci-gen: ${BUILDER_FILES}
 	git diff --exit-code tests/common
 
-ci-python: test-python ci-gen-clean ci-gen
+ci-python: test-python ci-gen-prepare ci-gen
 
 .PHONY: test test-python test-rust
 .PHONY: gen gen-clean gen-force
