@@ -30,12 +30,14 @@ pub trait Verify {
     fn verify(&self) -> Result;
 }
 
+pub const MAX_OFFSET_LOC: usize = usize::max_value() - flatbuffers::SIZE_UOFFSET;
+
 fn read_uoffset(buf: &[u8], offset_loc: usize) -> usize {
     flatbuffers::read_scalar::<flatbuffers::UOffsetT>(&buf[offset_loc..]) as usize
 }
 
 fn try_read_uoffset(buf: &[u8], offset_loc: usize) -> result::Result<usize, Error> {
-    if offset_loc + flatbuffers::SIZE_UOFFSET <= buf.len() {
+    if offset_loc <= MAX_OFFSET_LOC && offset_loc + flatbuffers::SIZE_UOFFSET <= buf.len() {
         Ok(read_uoffset(buf, offset_loc))
     } else {
         Err(Error::OutOfBounds)
@@ -43,7 +45,8 @@ fn try_read_uoffset(buf: &[u8], offset_loc: usize) -> result::Result<usize, Erro
 }
 
 pub fn try_follow_uoffset(buf: &[u8], offset_loc: usize) -> result::Result<usize, Error> {
-    try_read_uoffset(buf, offset_loc).map(|offset| offset_loc + offset)
+    try_read_uoffset(buf, offset_loc)
+        .and_then(|offset| offset_loc.checked_add(offset).ok_or(Error::OutOfBounds))
 }
 
 #[allow(dead_code)]
@@ -64,11 +67,14 @@ impl<'a> Verify for StringVerifier<'a> {
         let buf_len = self.buf.len();
 
         let len = try_read_uoffset(self.buf, self.loc)?;
-        if self.loc + flatbuffers::SIZE_UOFFSET + len + 1 > buf_len {
+        let null_loc = (self.loc + flatbuffers::SIZE_UOFFSET)
+            .checked_add(len)
+            .ok_or(Error::OutOfBounds)?;
+
+        if null_loc >= buf_len {
             return Err(Error::OutOfBounds);
         }
-
-        if self.buf[self.loc + flatbuffers::SIZE_UOFFSET + len] != 0 {
+        if self.buf[null_loc] != 0 {
             return Err(Error::NonNullTerminatedString);
         }
 
@@ -93,11 +99,13 @@ impl<'a> VectorVerifier<'a> {
     pub fn verify_scalar_elements(&self, scalar_size: usize) -> Result {
         let len = try_read_uoffset(self.buf, self.loc)?;
 
-        if self.loc + flatbuffers::SIZE_UOFFSET + len * scalar_size > self.buf.len() {
-            return Err(Error::OutOfBounds);
+        match (self.loc + flatbuffers::SIZE_UOFFSET)
+            .checked_add(len * scalar_size)
+            .filter(|loc| *loc <= self.buf.len())
+        {
+            Some(_) => Ok(()),
+            _ => Err(Error::OutOfBounds),
         }
-
-        Ok(())
     }
 
     pub fn verify_reference_elements<E>(&self) -> Result
@@ -108,13 +116,21 @@ impl<'a> VectorVerifier<'a> {
         let len = try_read_uoffset(self.buf, self.loc)?;
 
         let mut offset_loc = self.loc + flatbuffers::SIZE_UOFFSET;
-        let end_loc = offset_loc + len * flatbuffers::SIZE_UOFFSET;
+        let end_loc = offset_loc
+            .checked_add(len * flatbuffers::SIZE_UOFFSET)
+            .ok_or(Error::OutOfBounds)?;
         if end_loc > self.buf.len() {
             return Err(Error::OutOfBounds);
         }
 
         while offset_loc < end_loc {
-            E::follow(self.buf, offset_loc + read_uoffset(self.buf, offset_loc)).verify()?;
+            E::follow(
+                self.buf,
+                offset_loc
+                    .checked_add(read_uoffset(self.buf, offset_loc))
+                    .ok_or(Error::OutOfBounds)?,
+            )
+            .verify()?;
             offset_loc += flatbuffers::SIZE_UOFFSET;
         }
 
@@ -143,26 +159,46 @@ impl<'a> Verify for reader::T1<'a> {
         let buf = tab.buf;
         let buf_len = buf.len();
 
-        if tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
+        if tab.loc > MAX_OFFSET_LOC || tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
             return Err(Error::OutOfBounds);
         }
 
         let vtab_loc = {
-            let soffset_slice = &buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
+            let soffset_slice = &buf[tab.loc..];
             let soffset = flatbuffers::read_scalar::<flatbuffers::SOffsetT>(soffset_slice);
-            (tab.loc as flatbuffers::SOffsetT - soffset) as usize
-        };
-        if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > buf_len {
+            if soffset >= 0 {
+                tab.loc.checked_sub(soffset as usize)
+            } else {
+                soffset
+                    .checked_neg()
+                    .and_then(|foffset| tab.loc.checked_add(foffset as usize))
+            }
+        }
+        .ok_or(Error::OutOfBounds)?;
+        if vtab_loc
+            .checked_add(flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
 
         let vtab = tab.vtable();
         let vtab_num_bytes = vtab.num_bytes();
-        if vtab_loc + vtab_num_bytes > buf_len {
+        if vtab_loc
+            .checked_add(vtab_num_bytes)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
         let object_inline_num_bytes = vtab.object_inline_num_bytes();
-        if tab.loc + object_inline_num_bytes > buf_len {
+        if tab
+            .loc
+            .checked_add(object_inline_num_bytes)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
 
@@ -175,27 +211,35 @@ impl<'a> Verify for reader::T1<'a> {
             }
         }
 
-        if Self::VT_F1 as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_F1 as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_F1) as usize;
-            if voffset > 0 && voffset + 8 > object_inline_num_bytes {
+            if voffset > 0 && object_inline_num_bytes - voffset < 8 {
                 return Err(Error::OutOfBounds);
             }
         }
 
-        if Self::VT_S1 as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_S1 as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_S1) as usize;
             if voffset > 0 {
                 if voffset + 4 > object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
                 }
 
-                let s1_verifier =
-                    VectorVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?);
+                let s1_verifier = VectorVerifier::follow(
+                    buf,
+                    try_follow_uoffset(buf, tab.loc + voffset)?,
+                );
                 s1_verifier.verify_scalar_elements(1)?;
             }
         }
 
-        if Self::VT_F2 as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_F2 as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_F2) as usize;
             if voffset > 0 {
                 if voffset + 4 > object_inline_num_bytes {
@@ -208,46 +252,60 @@ impl<'a> Verify for reader::T1<'a> {
             }
         }
 
-        if Self::VT_S2 as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_S2 as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_S2) as usize;
             if voffset > 0 {
                 if voffset + 4 > object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
                 }
 
-                let s2_verifier =
-                    VectorVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?);
+                let s2_verifier = VectorVerifier::follow(
+                    buf,
+                    try_follow_uoffset(buf, tab.loc + voffset)?,
+                );
                 s2_verifier.verify_scalar_elements(1)?;
             }
         }
 
-        if Self::VT_F3 as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_F3 as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_F3) as usize;
             if voffset > 0 {
                 if voffset + 4 > object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
                 }
 
-                let f3_verifier =
-                    VectorVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?);
+                let f3_verifier = VectorVerifier::follow(
+                    buf,
+                    try_follow_uoffset(buf, tab.loc + voffset)?,
+                );
                 f3_verifier.verify_scalar_elements(8)?;
             }
         }
 
-        if Self::VT_S3 as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_S3 as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_S3) as usize;
             if voffset > 0 {
                 if voffset + 4 > object_inline_num_bytes {
                     return Err(Error::OutOfBounds);
                 }
 
-                let s3_verifier =
-                    VectorVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?);
+                let s3_verifier = VectorVerifier::follow(
+                    buf,
+                    try_follow_uoffset(buf, tab.loc + voffset)?,
+                );
                 s3_verifier.verify_scalar_elements(1)?;
             }
         }
 
-        if Self::VT_F4 as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_F4 as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_F4) as usize;
             if voffset > 0 {
                 if voffset + 4 > object_inline_num_bytes {
@@ -268,26 +326,46 @@ impl<'a> Verify for reader::T2<'a> {
         let buf = tab.buf;
         let buf_len = buf.len();
 
-        if tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
+        if tab.loc > MAX_OFFSET_LOC || tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
             return Err(Error::OutOfBounds);
         }
 
         let vtab_loc = {
-            let soffset_slice = &buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
+            let soffset_slice = &buf[tab.loc..];
             let soffset = flatbuffers::read_scalar::<flatbuffers::SOffsetT>(soffset_slice);
-            (tab.loc as flatbuffers::SOffsetT - soffset) as usize
-        };
-        if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > buf_len {
+            if soffset >= 0 {
+                tab.loc.checked_sub(soffset as usize)
+            } else {
+                soffset
+                    .checked_neg()
+                    .and_then(|foffset| tab.loc.checked_add(foffset as usize))
+            }
+        }
+        .ok_or(Error::OutOfBounds)?;
+        if vtab_loc
+            .checked_add(flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
 
         let vtab = tab.vtable();
         let vtab_num_bytes = vtab.num_bytes();
-        if vtab_loc + vtab_num_bytes > buf_len {
+        if vtab_loc
+            .checked_add(vtab_num_bytes)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
         let object_inline_num_bytes = vtab.object_inline_num_bytes();
-        if tab.loc + object_inline_num_bytes > buf_len {
+        if tab
+            .loc
+            .checked_add(object_inline_num_bytes)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
 
@@ -300,9 +378,11 @@ impl<'a> Verify for reader::T2<'a> {
             }
         }
 
-        if Self::VT_F1 as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_F1 as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_F1) as usize;
-            if voffset > 0 && voffset + 1 > object_inline_num_bytes {
+            if voffset > 0 && object_inline_num_bytes - voffset < 1 {
                 return Err(Error::OutOfBounds);
             }
         }
