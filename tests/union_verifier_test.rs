@@ -1,7 +1,7 @@
 pub mod common;
 
 use common::union_generated::example::Player;
-use common::union_generated_verifier::{get_root, Error};
+use flatbuffers_verifier::{get_root, Error};
 
 #[test]
 fn test_union_element_verification_error() {

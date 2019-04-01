@@ -125,17 +125,17 @@ impl<'a> Verify for reader::{{ name }}<'a> {
 
 {%- for name, mod in mod.children.items() %}
   {%- set mod_content %}
-    {%- include "_legacy_verifier_mod.rs.jinja" %}
+    {%- include "_flatbuffers_verifier_mod.rs.jinja" %}
   {%- endset %}
 pub mod {{ cfb.camel_to_snake(name) }} {
     #![allow(unused_imports)]
 
     use super::reader::{{ cfb.camel_to_snake(name) }} as reader;
-    pub use super::{
+    use flatbuffers::{self, Follow};
+    use flatbuffers_verifier::{
         try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify,
         MAX_OFFSET_LOC,
     };
-    use flatbuffers::{self, Follow};
     {{- mod_content | indent }}
 }
 {% endfor %}

@@ -25,7 +25,7 @@ class Generator(object):
         with open(path.join(outdir, self.basename + '_builder.rs'), 'w') as out_file:
             out_file.write(builder_content)
 
-        legacy_verifier = env.get_template('legacy_verifier.rs.jinja')
-        legacy_verifier_content = legacy_verifier.render(cfb=self.context)
+        flatbuffers_verifier = env.get_template('flatbuffers_verifier.rs.jinja')
+        flatbuffers_verifier_content = flatbuffers_verifier.render(cfb=self.context)
         with open(path.join(outdir, self.basename + '_generated_verifier.rs'), 'w') as out_file:
-            out_file.write(legacy_verifier_content)
+            out_file.write(flatbuffers_verifier_content)
