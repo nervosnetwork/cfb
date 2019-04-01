@@ -5,9 +5,9 @@ BFBS_FILES := $(patsubst %.fbs,%.bfbs,${FBS_FILES})
 JSON_FILES := $(patsubst %.fbs,%.json,${FBS_FILES})
 FLATC_RUST_FILES := $(patsubst %.fbs,%_generated.rs,${FBS_FILES})
 BUILDER_FILES := $(patsubst %.fbs,%_builder.rs,${FBS_FILES})
-LEGACY_VERIFIER_FILES := $(patsubst %.fbs,%_generated_verifier.rs,${FBS_FILES})
+FLATBUFFERS_VERIFIER_FILES := $(patsubst %.fbs,%_generated_verifier.rs,${FBS_FILES})
 
-GEN_FILES := ${BFBS_FILES} ${JSON_FILES} ${FLATC_RUST_FILES} ${BUILDER_FILES} ${LEGACY_VERIFIER_FILES}
+GEN_FILES := ${BFBS_FILES} ${JSON_FILES} ${FLATC_RUST_FILES} ${BUILDER_FILES} ${FLATBUFFERS_VERIFIER_FILES}
 
 TEMPLATES := $(wildcard cfb/templates/*.jinja)
 
@@ -71,7 +71,7 @@ ci-rust: fmt clippy test-rust
 	git diff --exit-code Cargo.lock
 
 ci-gen-prepare:
-	rm -f ${BUILDER_FILES} ${LEGACY_VERIFIER_FILES}
+	rm -f ${BUILDER_FILES} ${FLATBUFFERS_VERIFIER_FILES}
 	touch ${BFBS_FILES}
 ci-gen: ${BUILDER_FILES}
 	git diff --exit-code tests/common
