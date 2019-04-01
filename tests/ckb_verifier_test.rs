@@ -1,8 +1,8 @@
 pub mod common;
 
 use common::ckb_generated::ckb::protocol as g;
-use common::ckb_generated_verifier::{get_root, Error};
 use flatbuffers::{FlatBufferBuilder, ForwardsUOffset, WIPOffset};
+use flatbuffers_verifier::{get_root, Error};
 use proptest::prelude::*;
 use std::mem;
 use std::panic;

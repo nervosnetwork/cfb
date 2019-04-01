@@ -1,8 +1,7 @@
 pub mod common;
 
 use common::string_generated::example as reader;
-use common::string_generated_verifier::example as verifier;
-use common::string_generated_verifier::get_root;
+use flatbuffers_verifier::{get_root, Error};
 
 #[test]
 fn test_string_uoffset_out_of_bounds() {
@@ -18,7 +17,7 @@ fn test_string_uoffset_out_of_bounds() {
     ]
     .concat();
     let author = get_root::<reader::Author>(&buf);
-    assert_eq!(author, Err(verifier::Error::OutOfBounds));
+    assert_eq!(author, Err(Error::OutOfBounds));
 }
 
 #[test]
@@ -37,7 +36,7 @@ fn test_string_len_out_of_bounds() {
     ]
     .concat();
     let author = get_root::<reader::Author>(&buf);
-    assert_eq!(author, Err(verifier::Error::OutOfBounds));
+    assert_eq!(author, Err(Error::OutOfBounds));
 }
 
 #[test]
@@ -57,7 +56,7 @@ fn test_string_content_out_of_bounds() {
     ]
     .concat();
     let author = get_root::<reader::Author>(&buf);
-    assert_eq!(author, Err(verifier::Error::OutOfBounds));
+    assert_eq!(author, Err(Error::OutOfBounds));
 }
 
 #[test]
@@ -77,5 +76,5 @@ fn test_string_not_terminated_with_null() {
     ]
     .concat();
     let author = get_root::<reader::Author>(&buf);
-    assert_eq!(author, Err(verifier::Error::NonNullTerminatedString));
+    assert_eq!(author, Err(Error::NonNullTerminatedString));
 }

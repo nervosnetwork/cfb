@@ -2,7 +2,7 @@ pub mod common;
 
 mod scalar_vector_test {
     use super::common::scalar_vector_generated::example::Sensor;
-    use super::common::scalar_vector_generated_verifier::{get_root, Error};
+    use flatbuffers_verifier::{get_root, Error};
 
     #[test]
     fn test_scalar_vector_uoffset_out_of_bounds() {
@@ -63,7 +63,7 @@ mod scalar_vector_test {
 
 mod string_vector_test {
     use super::common::string_vector_generated::example::Text;
-    use super::common::string_vector_generated_verifier::{get_root, Error};
+    use flatbuffers_verifier::{get_root, Error};
 
     #[test]
     fn test_string_vector_uoffset_out_of_bounds() {
@@ -147,7 +147,7 @@ mod string_vector_test {
 
 mod table_vector_test {
     use super::common::table_vector_generated::example::Hero;
-    use super::common::table_vector_generated_verifier::{get_root, Error};
+    use flatbuffers_verifier::{get_root, Error};
 
     #[test]
     fn test_table_vector_uoffset_out_of_bounds() {
