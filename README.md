@@ -32,6 +32,7 @@ cfbc example.bfbs
 -   Use the same version of `flatbuffers` as in `flatbuffers-verifier`.
 
 ```
+flatbuffers-verifier = { git = "https://github.com/nervosnetwork/flatbuffers-verifier" }
 flatbuffers = { git = "https://github.com/google/flatbuffers", rev = "4f10da8d99c1a7bc8c9c7d06d2092a689f171d29" }
 ```
 
