@@ -125,7 +125,7 @@ impl<'a> Verify for reader::{{ name }}<'a> {
 
 {%- for name, mod in mod.children.items() %}
   {%- set mod_content %}
-    {%- include "_legacy_verifier_mod.rs.jinja" %}
+    {%- include "_flatbuffers_verifier_mod.rs.jinja" %}
   {%- endset %}
 pub mod {{ cfb.camel_to_snake(name) }} {
     #![allow(unused_imports)]
