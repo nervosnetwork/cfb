@@ -8,26 +8,46 @@ impl<'a> Verify for reader::{{ name }}<'a> {
         let buf = tab.buf;
         let buf_len = buf.len();
 
-        if tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
+        if tab.loc > MAX_OFFSET_LOC || tab.loc + flatbuffers::SIZE_SOFFSET > buf_len {
             return Err(Error::OutOfBounds);
         }
 
         let vtab_loc = {
-            let soffset_slice = &buf[tab.loc..tab.loc + flatbuffers::SIZE_SOFFSET];
+            let soffset_slice = &buf[tab.loc..];
             let soffset = flatbuffers::read_scalar::<flatbuffers::SOffsetT>(soffset_slice);
-            (tab.loc as flatbuffers::SOffsetT - soffset) as usize
-        };
-        if vtab_loc + flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET > buf_len {
+            if soffset >= 0 {
+                tab.loc.checked_sub(soffset as usize)
+            } else {
+                soffset
+                    .checked_neg()
+                    .and_then(|foffset| tab.loc.checked_add(foffset as usize))
+            }
+        }
+        .ok_or(Error::OutOfBounds)?;
+        if vtab_loc
+            .checked_add(flatbuffers::SIZE_VOFFSET + flatbuffers::SIZE_VOFFSET)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
 
         let vtab = tab.vtable();
         let vtab_num_bytes = vtab.num_bytes();
-        if vtab_loc + vtab_num_bytes > buf_len {
+        if vtab_loc
+            .checked_add(vtab_num_bytes)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
         let object_inline_num_bytes = vtab.object_inline_num_bytes();
-        if tab.loc + object_inline_num_bytes > buf_len {
+        if tab
+            .loc
+            .checked_add(object_inline_num_bytes)
+            .filter(|loc| *loc <= buf_len)
+            .is_none()
+        {
             return Err(Error::OutOfBounds);
         }
 
@@ -41,7 +61,9 @@ impl<'a> Verify for reader::{{ name }}<'a> {
         }
       {%- for field in cfb.fields_sorted_by_offset(object) %}
 
-        if Self::VT_{{ cfb.field_name(field) | upper }} as usize + flatbuffers::SIZE_VOFFSET <= vtab_num_bytes {
+        if Self::VT_{{ cfb.field_name(field) | upper }} as usize + flatbuffers::SIZE_VOFFSET
+            <= vtab_num_bytes
+        {
             let voffset = vtab.get(Self::VT_{{ cfb.field_name(field) | upper }}) as usize;
         {%- if cfb.is_table(field) or cfb.is_string(field) or cfb.is_vector(field) or cfb.is_union(field) %}
             if voffset > 0 {
@@ -58,12 +80,15 @@ impl<'a> Verify for reader::{{ name }}<'a> {
                 StringVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?).verify()?;
           {%- elif cfb.is_vector(field) %}
 
-                let {{ cfb.field_name(field) }}_verifier =
-                    VectorVerifier::follow(buf, try_follow_uoffset(buf, tab.loc + voffset)?);
+                let {{ cfb.field_name(field) }}_verifier = VectorVerifier::follow(
+                    buf,
+                    try_follow_uoffset(buf, tab.loc + voffset)?,
+                );
             {%- if cfb.is_element_string(field) %}
                 {{ cfb.field_name(field) }}_verifier.verify_reference_elements::<StringVerifier>()?;
             {%- elif cfb.is_element_table(field) %}
-                {{ cfb.field_name(field) }}_verifier.verify_reference_elements::<reader::{{ cfb.base_name(cfb.schema.Objects(field.Type().Index())) }}>()?;
+                {{ cfb.field_name(field) }}_verifier
+                    .verify_reference_elements::<reader::{{ cfb.base_name(cfb.schema.Objects(field.Type().Index())) }}>()?;
             {%- else %}
                 {{ cfb.field_name(field) }}_verifier.verify_scalar_elements({{ cfb.element_size(field) }})?;
             {%- endif %}
@@ -84,7 +109,7 @@ impl<'a> Verify for reader::{{ name }}<'a> {
           {%- endif %}
             }
         {%- else %}
-            if voffset > 0 && voffset + {{ cfb.field_size(field) }} > object_inline_num_bytes {
+            if voffset > 0 && object_inline_num_bytes - voffset < {{ cfb.field_size(field) }} {
                 return Err(Error::OutOfBounds);
             }
         {%- endif %}
@@ -106,7 +131,10 @@ pub mod {{ cfb.camel_to_snake(name) }} {
     #![allow(unused_imports)]
 
     use super::reader::{{ cfb.camel_to_snake(name) }} as reader;
-    pub use super::{try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify};
+    pub use super::{
+        try_follow_uoffset, Error, Result, StringVerifier, VectorVerifier, Verify,
+        MAX_OFFSET_LOC,
+    };
     use flatbuffers::{self, Follow};
     {{- mod_content | indent }}
 }
