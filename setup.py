@@ -24,7 +24,7 @@ setup(name='cfbc',
       author_email='dev@nervos.org',
       license='MIT',
       packages=find_packages(),
-      install_requires=['docopt', 'Jinja2', 'flatbuffers'],
+      install_requires=['docopt', 'Jinja2>=2.10.1', 'flatbuffers'],
       scripts=['bin/cfbc'],
       zip_safe=False,
       classifiers=[
