@@ -7,4 +7,4 @@ name = "pypi"
 cfbc = {editable = true,path = "."}
 
 [dev-packages]
-mock = "==1.0.1"
+mock = "==2.0.0"
