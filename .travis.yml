@@ -6,7 +6,7 @@ cache:
   directories:
     - $HOME/.cargo
 
-if: 'branch IN (master, poc) OR type != push OR fork = true OR tag =~ ^v'
+if: "branch IN (master, poc) OR type != push OR fork = true OR tag =~ ^v"
 
 env:
   global:
@@ -18,13 +18,10 @@ matrix:
     - os: linux
 
 install:
-  - cargo fmt --version || rustup component add rustfmt
-  - cargo clippy --version || rustup component add clippy
+  - make ci-install
 
 script:
-  - cargo fmt -- --check
-  - cargo clippy
-  - cargo test
+  - make ci
 
 before_cache:
   - rm -rf $HOME/.cargo/registry

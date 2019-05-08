@@ -33,6 +33,10 @@ impl Builder {
         self.buffer.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.buffer.is_empty()
+    }
+
     pub fn as_bytes(&self) -> &[u8] {
         self.buffer.as_slice()
     }
@@ -92,7 +96,6 @@ impl Builder {
         }
     }
 }
-
 impl WriteInto for bool {
     fn write_into(self, builder: &mut Builder) {
         if self {
@@ -100,6 +103,47 @@ impl WriteInto for bool {
         } else {
             builder.push(0);
         }
+    }
+}
+
+impl WriteInto for u8 {
+    fn write_into(self, builder: &mut Builder) {
+        builder.push(self);
+    }
+}
+
+impl WriteInto for i8 {
+    fn write_into(self, builder: &mut Builder) {
+        builder.push(self as u8);
+    }
+}
+
+macro_rules! impl_write_into_via_to_le_bytes {
+    ($ty:ident) => {
+        impl WriteInto for $ty {
+            fn write_into(self, builder: &mut Builder) {
+                builder.push_bytes(&self.to_le_bytes())
+            }
+        }
+    };
+}
+
+impl_write_into_via_to_le_bytes!(i16);
+impl_write_into_via_to_le_bytes!(u16);
+impl_write_into_via_to_le_bytes!(i32);
+impl_write_into_via_to_le_bytes!(u32);
+impl_write_into_via_to_le_bytes!(i64);
+impl_write_into_via_to_le_bytes!(u64);
+
+impl WriteInto for f32 {
+    fn write_into(self, builder: &mut Builder) {
+        builder.push_bytes(&self.to_bits().to_le_bytes())
+    }
+}
+
+impl WriteInto for f64 {
+    fn write_into(self, builder: &mut Builder) {
+        builder.push_bytes(&self.to_bits().to_le_bytes())
     }
 }
 
