@@ -3,5 +3,9 @@ name = "cfb-runtime"
 version = "0.1.0"
 authors = ["Nervos Core Dev <dev@nervos.org>"]
 edition = "2018"
+license = "MIT"
 
 [dependencies]
+
+[dev-dependencies]
+proptest = "0.9.1"
