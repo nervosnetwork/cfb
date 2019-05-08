@@ -1,0 +1,10 @@
+[package]
+name = "cfb-schema"
+version = "0.1.0"
+authors = ["Nervos Core Dev <dev@nervos.org>"]
+edition = "2018"
+license = "MIT"
+
+[dependencies]
+flatbuffers = "0.6.0"
+serde = { version = "1.0", features = ["derive"] }

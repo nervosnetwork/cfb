@@ -2,4 +2,5 @@
 members = [
   "cfbc",
   "cfb-runtime",
+  "cfb-schema",
 ]
