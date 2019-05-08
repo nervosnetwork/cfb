@@ -2,7 +2,7 @@ use crate::reflection_generated::reflection;
 use serde::Serialize;
 use std::collections::HashMap;
 
-#[derive(Serialize)]
+#[derive(Serialize, Eq, PartialEq, Debug)]
 pub enum Type {
     UType,
     Bool,
@@ -23,14 +23,14 @@ pub enum Type {
     Union(usize),
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Schema {
     namespaces: Vec<String>,
     objects: Vec<Object>,
     enums: Vec<Enum>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Object {
     name: String,
     fields: Vec<Field>,
@@ -38,10 +38,9 @@ pub struct Object {
     minalign: i32,
     bytesize: i32,
     attributes: HashMap<String, String>,
-    documentation: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Field {
     name: String,
     r#type: Type,
@@ -53,25 +52,22 @@ pub struct Field {
     required: bool,
     key: bool,
     attributes: HashMap<String, String>,
-    documentation: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Enum {
     name: String,
     values: Vec<EnumVal>,
     is_union: bool,
     underlying_type: Type,
     attributes: HashMap<String, String>,
-    documentation: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct EnumVal {
     name: String,
     value: i64,
-    union_type: Option<Object>,
-    documentation: Vec<String>,
+    union_type: Option<usize>,
 }
 
 impl Schema {
@@ -93,12 +89,130 @@ impl<'a> From<reflection::Schema<'a>> for Schema {
         let mut namespaces: Vec<_> = name.split('.').map(str::to_string).collect();
         namespaces.pop();
 
+        let objects = vector_into_iter(schema.objects()).map(Into::into).collect();
+        let enums = vector_into_iter(schema.enums()).map(Into::into).collect();
+
         Schema {
             namespaces,
-            objects: vec![],
-            enums: vec![],
+            objects,
+            enums,
         }
     }
+}
+
+impl<'a> From<reflection::Object<'a>> for Object {
+    fn from(o: reflection::Object<'a>) -> Object {
+        Object {
+            name: o.name().to_owned(),
+            fields: vector_into_iter(o.fields()).map(Into::into).collect(),
+            is_struct: o.is_struct(),
+            minalign: o.minalign(),
+            bytesize: o.bytesize(),
+            attributes: collect_attributes(o.attributes()),
+        }
+    }
+}
+
+impl<'a> From<reflection::Enum<'a>> for Enum {
+    fn from(e: reflection::Enum<'a>) -> Enum {
+        Enum {
+            name: e.name().to_string(),
+            values: vector_into_iter(e.values()).map(Into::into).collect(),
+            is_union: e.is_union(),
+            underlying_type: e.underlying_type().into(),
+            attributes: collect_attributes(e.attributes()),
+        }
+    }
+}
+
+impl<'a> From<reflection::EnumVal<'a>> for EnumVal {
+    fn from(ev: reflection::EnumVal<'a>) -> EnumVal {
+        EnumVal {
+            name: ev.name().to_string(),
+            value: ev.value(),
+            union_type: ev.union_type().map(|t| t.index() as usize),
+        }
+    }
+}
+
+impl<'a> From<reflection::Field<'a>> for Field {
+    fn from(f: reflection::Field<'a>) -> Field {
+        Field {
+            name: f.name().to_string(),
+            r#type: f.type_().into(),
+            id: f.id(),
+            offset: f.offset(),
+            default_integer: f.default_integer(),
+            default_real: f.default_real(),
+            deprecated: f.deprecated(),
+            required: f.required(),
+            key: f.key(),
+            attributes: collect_attributes(f.attributes()),
+        }
+    }
+}
+
+impl<'a> From<reflection::Type<'a>> for Type {
+    fn from(t: reflection::Type<'a>) -> Type {
+        match t.base_type() {
+            reflection::BaseType::Vector => Type::Vector(Box::new(match t.element() {
+                reflection::BaseType::Obj => Type::Obj(t.index() as usize),
+                element => try_from_base_type(element),
+            })),
+            reflection::BaseType::Obj => Type::Obj(t.index() as usize),
+            reflection::BaseType::Union => Type::Union(t.index() as usize),
+            base_type => try_from_base_type(base_type),
+        }
+    }
+}
+
+fn try_from_base_type(t: reflection::BaseType) -> Type {
+    match t {
+        reflection::BaseType::UType => Type::UType,
+        reflection::BaseType::Bool => Type::Bool,
+        reflection::BaseType::Byte => Type::Byte,
+        reflection::BaseType::UByte => Type::UByte,
+        reflection::BaseType::Short => Type::Short,
+        reflection::BaseType::UShort => Type::UShort,
+        reflection::BaseType::Int => Type::Int,
+        reflection::BaseType::UInt => Type::UInt,
+        reflection::BaseType::Long => Type::Long,
+        reflection::BaseType::ULong => Type::ULong,
+        reflection::BaseType::Float => Type::Float,
+        reflection::BaseType::Double => Type::Double,
+        reflection::BaseType::String => Type::String,
+        _ => unreachable!(),
+    }
+}
+
+fn vector_into_iter<'a, 'v, T>(
+    vec: flatbuffers::Vector<'a, T>,
+) -> impl Iterator<Item = <T as flatbuffers::Follow>::Inner> + 'a
+where
+    T: flatbuffers::Follow<'a> + 'a,
+{
+    (0..vec.len()).map(move |i| vec.get(i))
+}
+
+fn collect_attributes<'a>(
+    attributes: Option<
+        flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<reflection::KeyValue<'a>>>,
+    >,
+) -> HashMap<String, String> {
+    attributes
+        .map(|vec| {
+            vector_into_iter(vec)
+                .map(|kv| {
+                    (
+                        kv.key().to_string(),
+                        kv.value()
+                            .map(str::to_string)
+                            .unwrap_or_else(Default::default),
+                    )
+                })
+                .collect()
+        })
+        .unwrap_or_else(Default::default)
 }
 
 #[cfg(test)]
@@ -160,7 +274,13 @@ mod tests {
             let enum_offset = {
                 let name = builder.create_string("foo.bar.z");
                 let values_offset = builder.create_vector::<WIPOffset<reflection::EnumVal>>(&[]);
-                let underlying_type_offset = reflection::TypeBuilder::new(&mut builder).finish();
+                let underlying_type_offset = reflection::Type::create(
+                    &mut builder,
+                    &reflection::TypeArgs {
+                        base_type: reflection::BaseType::UByte,
+                        ..Default::default()
+                    },
+                );
 
                 let mut enum_builder = reflection::EnumBuilder::new(&mut builder);
                 enum_builder.add_name(name);
@@ -209,5 +329,84 @@ mod tests {
             Schema::from_bytes(builder.finished_data())
         };
         assert!(schema.namespaces.is_empty());
+    }
+
+    #[test]
+    fn test_convert_object() {
+        let mut builder = FlatBufferBuilder::new();
+
+        let field_name = builder.create_string("field");
+        let field_type = reflection::Type::create(
+            &mut builder,
+            &reflection::TypeArgs {
+                base_type: reflection::BaseType::UByte,
+                ..Default::default()
+            },
+        );
+        let field_offset = reflection::Field::create(
+            &mut builder,
+            &reflection::FieldArgs {
+                name: Some(field_name),
+                type_: Some(field_type),
+                ..Default::default()
+            },
+        );
+
+        let object_offset = {
+            let name = builder.create_string("foo");
+            let fields_offset = builder.create_vector(&[field_offset]);
+
+            let mut object_builder = reflection::ObjectBuilder::new(&mut builder);
+            object_builder.add_name(name);
+            object_builder.add_fields(fields_offset);
+            object_builder.finish()
+        };
+        builder.finish_minimal(object_offset);
+
+        let o: Object = flatbuffers::get_root::<reflection::Object>(builder.finished_data()).into();
+        assert_eq!("foo", o.name);
+        assert_eq!(1, o.fields.len());
+        assert_eq!("field", o.fields[0].name);
+        assert_eq!(Type::UByte, o.fields[0].r#type);
+    }
+
+    #[test]
+    fn test_convert_enum() {
+        let mut builder = FlatBufferBuilder::new();
+
+        let enum_val_name = builder.create_string("ev1");
+        let enum_val_offset = reflection::EnumVal::create(
+            &mut builder,
+            &reflection::EnumValArgs {
+                name: Some(enum_val_name),
+                value: 1,
+                ..Default::default()
+            },
+        );
+
+        let enum_offset = {
+            let name = builder.create_string("foo");
+            let values_offset = builder.create_vector(&[enum_val_offset]);
+            let enum_type = reflection::Type::create(
+                &mut builder,
+                &reflection::TypeArgs {
+                    base_type: reflection::BaseType::UByte,
+                    ..Default::default()
+                },
+            );
+
+            let mut enum_builder = reflection::EnumBuilder::new(&mut builder);
+            enum_builder.add_name(name);
+            enum_builder.add_values(values_offset);
+            enum_builder.add_underlying_type(enum_type);
+            enum_builder.finish()
+        };
+        builder.finish_minimal(enum_offset);
+
+        let e: Enum = flatbuffers::get_root::<reflection::Enum>(builder.finished_data()).into();
+        assert_eq!("foo", e.name);
+        assert_eq!(1, e.values.len());
+        assert_eq!("ev1", e.values[0].name);
+        assert_eq!(1, e.values[0].value);
     }
 }
