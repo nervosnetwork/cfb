@@ -1,0 +1,30 @@
+language: rust
+rust: 1.34.1
+sudo: true
+cache:
+  timeout: 1024
+  directories:
+    - $HOME/.cargo
+
+if: 'branch IN (master, poc) OR type != push OR fork = true OR tag =~ ^v'
+
+env:
+  global:
+    - RUST_BACKTRACE=full
+
+matrix:
+  include:
+    - os: osx
+    - os: linux
+
+install:
+  - cargo fmt --version || rustup component add rustfmt
+  - cargo clippy --version || rustup component add clippy
+
+script:
+  - cargo fmt -- --check
+  - cargo clippy
+  - cargo test
+
+before_cache:
+  - rm -rf $HOME/.cargo/registry
