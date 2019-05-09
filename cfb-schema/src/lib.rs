@@ -3,4 +3,6 @@
 #[allow(unused_imports)]
 mod reflection_generated;
 
-pub mod schema;
+mod schema;
+
+pub use schema::*;

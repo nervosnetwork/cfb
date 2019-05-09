@@ -4,9 +4,20 @@ version = "0.1.0"
 authors = ["Nervos Core Dev <dev@nervos.org>"]
 edition = "2018"
 license = "MIT"
+build = "build.rs"
+include = ["/templates"]
 
 [dependencies]
 clap = "2.33.0"
+cfb-schema = { path = "../cfb-schema" }
+phf = "0.7.21"
+includedir = "0.5.0"
+handlebars = "2.0.0-beta"
+serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
 tempfile = "3.0"
+
+[build-dependencies]
+includedir_codegen = "0.5.0"
+walkdir = "2.1.4"

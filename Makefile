@@ -41,9 +41,11 @@ build-release:
 
 cfbc/tests/common/%_generated.rs: schema/%.bfbs
 	$(FLATC) -r -o $(shell dirname $@) $<
+	rustfmt $@
 
 cfbc/tests/common/%_builder.rs: schema/%.bfbs
 	cargo run -- -o $(shell dirname $@) $<
+	rustfmt $@
 
 gen: $(GEN_FILES)
 
