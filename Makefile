@@ -1,4 +1,13 @@
+FLATC := flatc
 VERBOSE := $(if ${CI},--verbose,)
+
+FBS_FILES := $(filter-out schema/reflection.fbs,$(wildcard schema/*.fbs))
+BFBS_FILES := $(patsubst %.fbs,%.bfbs,${FBS_FILES})
+JSON_FILES := $(patsubst %.fbs,%.json,${FBS_FILES})
+FLATC_RUST_FILES := $(patsubst schema/%.fbs,cfbc/tests/common/%_generated.rs,${FBS_FILES})
+BUILDER_FILES := $(patsubst schema/%.fbs,cfbc/tests/common/%_builder.rs,${FBS_FILES})
+
+GEN_FILES := ${BFBS_FILES} ${JSON_FILES} ${FLATC_RUST_FILES} ${BUILDER_FILES}
 
 test:
 	cargo test ${VERBOSE} --all
@@ -24,6 +33,29 @@ build-debug:
 build-release:
 	cargo build ${VERBOSE} --release
 
+%.bfbs: %.fbs
+	$(FLATC) -b --schema -o $(shell dirname $@) $<
+
+%.json: %.bfbs
+	$(FLATC) -t --strict-json -o $(shell dirname $@) schema/reflection.fbs -- $<
+
+cfbc/tests/common/%_generated.rs: schema/%.bfbs
+	$(FLATC) -r -o $(shell dirname $@) $<
+	rustfmt $@
+
+cfbc/tests/common/%_builder.rs: schema/%.bfbs
+	cargo run -- -o $(shell dirname $@) $<
+	rustfmt $@
+
+gen: $(GEN_FILES)
+
+gen-clean:
+	rm -f $(GEN_FILES)
+
+clean: gen-clean
+
 .PHONY: test fmt clippy check
 .PHONY: ci ci-install
 .PHONY: build-debug build-release
+.PHONY: gen gen-clean
+.PHONY: clean
