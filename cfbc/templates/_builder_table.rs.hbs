@@ -1,0 +1,57 @@
+#[derive(Default, Debug)]
+pub struct {{name}}Builder {
+    {{~#each fields}}
+    {{name}}: {{rust_type type}},
+    {{~/each}}
+}
+
+impl {{name}}Builder {
+    {{~#each fields}}
+    const VT_{{screaming_snake_case name}}: usize = {{offset}};
+    const SIZE_{{screaming_snake_case name}}: usize = {{size}};
+    const ALIGNMENT_{{screaming_snake_case name}}: usize = {{alignment}};
+    {{~/each}}
+    const ALIGNMENT: usize = {{alignment}};
+
+    pub fn new() -> Self {
+        {{name}}Builder::default()
+    }
+    {{~#each fields}}
+
+    pub fn {{name}}(&mut self, {{name}}: {{rust_type type}}) -> &mut Self {
+        self.{{name}} = {{name}};
+        self
+    }
+    {{~/each}}
+}
+
+impl<'a> PushReferenceInto for &'a mut {{name}}Builder {
+    fn push_into(self, builder: &mut Builder) -> usize {
+        let vtable_start = {
+            let mut vtable = builder.start_vtable();
+            {{~#each fields_by_alignment}}
+            if {{rust_is_field_present this}} {
+                vtable.add_field(
+                    {{../name}}Builder::VT_{{screaming_snake_case name}},
+                    {{../name}}Builder::SIZE_{{screaming_snake_case name}},
+                    {{../name}}Builder::ALIGNMENT_{{screaming_snake_case name}},
+                );
+            }
+            {{~/each}}
+            vtable.finish()
+        };
+
+        builder.align_after(SIZE_OF_SOFFSET, {{name}}Builder::ALIGNMENT);
+
+        let table_start = builder.len();
+        builder.push_scalar((table_start - vtable_start) as SOffset);
+        {{~#each fields_by_alignment}}
+        if {{rust_is_field_present this}} {
+            builder.align({{../name}}Builder::ALIGNMENT_{{screaming_snake_case name}});
+            builder.push_scalar(self.{{name}});
+        }
+        {{~/each}}
+
+        table_start
+    }
+}

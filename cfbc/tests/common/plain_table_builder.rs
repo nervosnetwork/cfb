@@ -1,4 +1,6 @@
 pub mod example {
+    #![allow(unused_imports)]
+
     use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET};
     use cfb_runtime::{Builder, PushReferenceInto};
 
@@ -36,14 +38,14 @@ pub mod example {
         fn push_into(self, builder: &mut Builder) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();
-                if self.balance != 0u64 {
+                if self.balance != 0 {
                     vtable.add_field(
                         AccountBuilder::VT_BALANCE,
                         AccountBuilder::SIZE_BALANCE,
                         AccountBuilder::ALIGNMENT_BALANCE,
                     );
                 }
-                if self.year != 0u32 {
+                if self.year != 0 {
                     vtable.add_field(
                         AccountBuilder::VT_YEAR,
                         AccountBuilder::SIZE_YEAR,
@@ -57,11 +59,11 @@ pub mod example {
 
             let table_start = builder.len();
             builder.push_scalar((table_start - vtable_start) as SOffset);
-            if self.balance != 0u64 {
+            if self.balance != 0 {
                 builder.align(AccountBuilder::ALIGNMENT_BALANCE);
                 builder.push_scalar(self.balance);
             }
-            if self.year != 0u32 {
+            if self.year != 0 {
                 builder.align(AccountBuilder::ALIGNMENT_YEAR);
                 builder.push_scalar(self.year);
             }

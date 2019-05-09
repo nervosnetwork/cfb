@@ -3,9 +3,10 @@
 
 include!(concat!(env!("OUT_DIR"), "/templates.rs"));
 
+use handlebars::Handlebars;
 use std::io::Read;
 
-pub fn templates() -> impl Iterator<Item = (&'static str, Box<dyn Read + 'static>)> {
+fn templates() -> impl Iterator<Item = (&'static str, Box<dyn Read + 'static>)> {
     TEMPLATES.file_names().map(|key| {
         (
             key.rsplitn(2, '/')
@@ -15,4 +16,11 @@ pub fn templates() -> impl Iterator<Item = (&'static str, Box<dyn Read + 'static
             TEMPLATES.read(key).expect("cannot read bundled template"),
         )
     })
+}
+
+pub fn register_templates(reg: &mut Handlebars) {
+    for (name, mut source) in templates() {
+        reg.register_template_source(name, &mut source)
+            .expect("register template");
+    }
 }

@@ -1,4 +1,5 @@
-use crate::templates::templates;
+use crate::helpers::register_helpers;
+use crate::templates::register_templates;
 use cfb_schema::Schema;
 use handlebars::{Handlebars, RenderError};
 use serde::Serialize;
@@ -17,13 +18,11 @@ pub struct Generator {
 impl Generator {
     pub fn new(schema: Schema) -> Self {
         let mut handlebars = Handlebars::new();
-        for (name, mut source) in templates() {
-            handlebars
-                .register_template_source(name, &mut source)
-                .expect("register template");
-        }
+        register_templates(&mut handlebars);
+        register_helpers(&mut handlebars, schema.clone());
 
         let context = Context { schema };
+        // println!("{}", handlebars::to_json(&context).to_string());
 
         Generator {
             context,

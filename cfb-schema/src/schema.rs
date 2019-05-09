@@ -2,9 +2,11 @@ use crate::reflection_generated::reflection;
 use serde::Serialize;
 use std::collections::HashMap;
 
-#[derive(Serialize, Eq, PartialEq, Debug)]
+const SIZE_OF_UOFFSET: usize = 4;
+
+#[derive(Serialize, Eq, PartialEq, Clone, Debug)]
 pub enum Type {
-    UType,
+    UType(usize),
     Bool,
     Byte,
     UByte,
@@ -16,31 +18,38 @@ pub enum Type {
     ULong,
     Float,
     Double,
-    String,
+    Enum {
+        underlying_type: Box<Type>,
+        index: usize,
+    },
 
+    String,
     Vector(Box<Type>),
     Obj(usize),
     Union(usize),
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Schema {
     namespaces: Vec<String>,
     objects: Vec<Object>,
     enums: Vec<Enum>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Object {
     name: String,
     fields: Vec<Field>,
+    fields_by_alignment: Vec<Field>,
     is_struct: bool,
     minalign: i32,
     bytesize: i32,
     attributes: HashMap<String, String>,
+
+    alignment: usize,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Field {
     name: String,
     r#type: Type,
@@ -52,9 +61,12 @@ pub struct Field {
     required: bool,
     key: bool,
     attributes: HashMap<String, String>,
+
+    size: usize,
+    alignment: usize,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct Enum {
     name: String,
     values: Vec<EnumVal>,
@@ -63,7 +75,7 @@ pub struct Enum {
     attributes: HashMap<String, String>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct EnumVal {
     name: String,
     value: i64,
@@ -73,6 +85,49 @@ pub struct EnumVal {
 impl Schema {
     pub fn from_bytes(bytes: &[u8]) -> Schema {
         reflection::get_root_as_schema(bytes).into()
+    }
+
+    pub fn type_size(&self, t: &Type) -> usize {
+        match t {
+            Type::UType(_) => 1,
+            Type::Bool => 1,
+            Type::Byte => 1,
+            Type::Short => 2,
+            Type::Int => 4,
+            Type::Long => 8,
+            Type::UByte => 1,
+            Type::UShort => 2,
+            Type::UInt => 4,
+            Type::ULong => 8,
+            Type::Float => 4,
+            Type::Double => 8,
+            Type::Enum {
+                underlying_type, ..
+            } => self.type_size(&underlying_type),
+            Type::Obj(index) => {
+                let obj = &self.objects[*index];
+                if obj.is_struct {
+                    obj.bytesize as usize
+                } else {
+                    SIZE_OF_UOFFSET
+                }
+            }
+            _ => SIZE_OF_UOFFSET,
+        }
+    }
+
+    pub fn type_alignment(&self, t: &Type) -> usize {
+        match t {
+            Type::Obj(index) => {
+                let obj = &self.objects[*index];
+                if obj.is_struct {
+                    obj.minalign as usize
+                } else {
+                    SIZE_OF_UOFFSET
+                }
+            }
+            _ => self.type_size(t),
+        }
     }
 }
 
@@ -89,14 +144,33 @@ impl<'a> From<reflection::Schema<'a>> for Schema {
         let mut namespaces: Vec<_> = name.split('.').map(str::to_string).collect();
         namespaces.pop();
 
-        let objects = vector_into_iter(schema.objects()).map(Into::into).collect();
+        let mut objects: Vec<Object> = vector_into_iter(schema.objects()).map(Into::into).collect();
         let enums = vector_into_iter(schema.enums()).map(Into::into).collect();
 
-        Schema {
+        let mut schema = Schema {
+            objects: objects.clone(),
             namespaces,
-            objects,
             enums,
+        };
+
+        for o in &mut objects {
+            for f in &mut o.fields {
+                f.size = schema.type_size(&f.r#type);
+                f.alignment = schema.type_alignment(&f.r#type);
+            }
+            o.fields_by_alignment = o.fields.clone();
+            o.fields_by_alignment
+                .sort_by(|a, b| (b.alignment, b.size).cmp(&(a.alignment, a.size)));
+            o.alignment = o
+                .fields
+                .iter()
+                .map(|f| f.alignment)
+                .max()
+                .unwrap_or(SIZE_OF_UOFFSET);
         }
+        schema.objects = objects;
+
+        schema
     }
 }
 
@@ -112,6 +186,10 @@ impl<'a> From<reflection::Object<'a>> for Object {
             bytesize: o.bytesize(),
             attributes: collect_attributes(o.attributes()),
             fields,
+
+            // wait for Schema to fill them
+            fields_by_alignment: Vec::new(),
+            alignment: 0,
         }
     }
 }
@@ -154,27 +232,33 @@ impl<'a> From<reflection::Field<'a>> for Field {
             required: f.required(),
             key: f.key(),
             attributes: collect_attributes(f.attributes()),
+
+            // Wait for Schema to fill them
+            alignment: 0,
+            size: 0,
         }
     }
 }
 
 impl<'a> From<reflection::Type<'a>> for Type {
     fn from(t: reflection::Type<'a>) -> Type {
+        let index = t.index();
+
         match t.base_type() {
             reflection::BaseType::Vector => Type::Vector(Box::new(match t.element() {
-                reflection::BaseType::Obj => Type::Obj(t.index() as usize),
-                element => try_from_base_type(element),
+                reflection::BaseType::Obj => Type::Obj(index as usize),
+                element => try_from_base_type(element, index),
             })),
             reflection::BaseType::Obj => Type::Obj(t.index() as usize),
             reflection::BaseType::Union => Type::Union(t.index() as usize),
-            base_type => try_from_base_type(base_type),
+            reflection::BaseType::UType => Type::UType(t.index() as usize),
+            base_type => try_from_base_type(base_type, index),
         }
     }
 }
 
-fn try_from_base_type(t: reflection::BaseType) -> Type {
-    match t {
-        reflection::BaseType::UType => Type::UType,
+fn try_from_base_type(base_type: reflection::BaseType, index: i32) -> Type {
+    let t = match base_type {
         reflection::BaseType::Bool => Type::Bool,
         reflection::BaseType::Byte => Type::Byte,
         reflection::BaseType::UByte => Type::UByte,
@@ -188,6 +272,14 @@ fn try_from_base_type(t: reflection::BaseType) -> Type {
         reflection::BaseType::Double => Type::Double,
         reflection::BaseType::String => Type::String,
         _ => unreachable!(),
+    };
+    if index >= 0 {
+        Type::Enum {
+            underlying_type: Box::new(t),
+            index: index as usize,
+        }
+    } else {
+        t
     }
 }
 

@@ -4,6 +4,7 @@ extern crate clap;
 mod cli_options;
 mod exit_code;
 mod generator;
+mod helpers;
 mod templates;
 
 use cfb_schema::Schema;

@@ -1,5 +1,14 @@
-{{#each schema.namespaces}}
-pub mod {{ this }} {
-{{/each}}
+{{~#each schema.namespaces}}
+pub mod {{this}} {
+{{~/each}}
+#![allow(unused_imports)]
 
-{{#each schema.namespaces}}}{{/each}}
+use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET};
+use cfb_runtime::{Builder, PushReferenceInto};
+
+{{~#each schema.objects}}
+
+{{>_builder_table.rs}}
+{{~/each}}
+
+{{~#each schema.namespaces}}}{{/each}}
