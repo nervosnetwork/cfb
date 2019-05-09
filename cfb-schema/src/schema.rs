@@ -102,22 +102,28 @@ impl<'a> From<reflection::Schema<'a>> for Schema {
 
 impl<'a> From<reflection::Object<'a>> for Object {
     fn from(o: reflection::Object<'a>) -> Object {
+        let mut fields: Vec<Field> = vector_into_iter(o.fields()).map(Into::into).collect();
+        fields.sort_by_key(|f| f.offset);
+
         Object {
-            name: o.name().to_owned(),
-            fields: vector_into_iter(o.fields()).map(Into::into).collect(),
+            name: base_name(o.name()).to_string(),
             is_struct: o.is_struct(),
             minalign: o.minalign(),
             bytesize: o.bytesize(),
             attributes: collect_attributes(o.attributes()),
+            fields,
         }
     }
 }
 
 impl<'a> From<reflection::Enum<'a>> for Enum {
     fn from(e: reflection::Enum<'a>) -> Enum {
+        let mut values: Vec<EnumVal> = vector_into_iter(e.values()).map(Into::into).collect();
+        values.sort_by_key(|f| f.value);
+
         Enum {
-            name: e.name().to_string(),
-            values: vector_into_iter(e.values()).map(Into::into).collect(),
+            values,
+            name: base_name(e.name()).to_string(),
             is_union: e.is_union(),
             underlying_type: e.underlying_type().into(),
             attributes: collect_attributes(e.attributes()),
@@ -213,6 +219,10 @@ fn collect_attributes<'a>(
                 .collect()
         })
         .unwrap_or_else(Default::default)
+}
+
+fn base_name(name: &str) -> &str {
+    name.rsplitn(2, '.').take(1).next().unwrap()
 }
 
 #[cfg(test)]
@@ -408,5 +418,127 @@ mod tests {
         assert_eq!(1, e.values.len());
         assert_eq!("ev1", e.values[0].name);
         assert_eq!(1, e.values[0].value);
+    }
+
+    #[test]
+    fn test_object_name() {
+        let mut builder = FlatBufferBuilder::new();
+        {
+            let object_args = reflection::ObjectArgs {
+                name: Some(builder.create_string("foo.bar")),
+                fields: Some(builder.create_vector::<WIPOffset<reflection::Field>>(&[])),
+                ..Default::default()
+            };
+            let object = reflection::Object::create(&mut builder, &object_args);
+            builder.finish_minimal(object);
+        }
+
+        let o: Object = flatbuffers::get_root::<reflection::Object>(builder.finished_data()).into();
+        assert_eq!("bar", o.name);
+    }
+
+    #[test]
+    fn test_enum_name() {
+        let mut builder = FlatBufferBuilder::new();
+        {
+            let enum_args = reflection::EnumArgs {
+                name: Some(builder.create_string("foo.bar")),
+                values: Some(builder.create_vector::<WIPOffset<reflection::EnumVal>>(&[])),
+                underlying_type: Some(reflection::Type::create(
+                    &mut builder,
+                    &reflection::TypeArgs {
+                        base_type: reflection::BaseType::UByte,
+                        ..Default::default()
+                    },
+                )),
+                ..Default::default()
+            };
+            let e = reflection::Enum::create(&mut builder, &enum_args);
+            builder.finish_minimal(e);
+        }
+
+        let e: Enum = flatbuffers::get_root::<reflection::Enum>(builder.finished_data()).into();
+        assert_eq!("bar", e.name);
+    }
+
+    #[test]
+    fn test_fields_sorted() {
+        let mut builder = FlatBufferBuilder::new();
+        {
+            let field1_args = reflection::FieldArgs {
+                name: Some(builder.create_string("field1")),
+                type_: Some(reflection::Type::create(
+                    &mut builder,
+                    &reflection::TypeArgs {
+                        base_type: reflection::BaseType::UByte,
+                        ..Default::default()
+                    },
+                )),
+                offset: 6,
+                ..Default::default()
+            };
+            let field2_args = reflection::FieldArgs {
+                name: Some(builder.create_string("field1")),
+                type_: Some(reflection::Type::create(
+                    &mut builder,
+                    &reflection::TypeArgs {
+                        base_type: reflection::BaseType::UByte,
+                        ..Default::default()
+                    },
+                )),
+                offset: 4,
+                ..Default::default()
+            };
+            let field1 = reflection::Field::create(&mut builder, &field1_args);
+            let field2 = reflection::Field::create(&mut builder, &field2_args);
+            let fields = builder.create_vector(&[field1, field2]);
+            let object_args = reflection::ObjectArgs {
+                name: Some(builder.create_string("foo.bar")),
+                fields: Some(fields),
+                ..Default::default()
+            };
+            let object = reflection::Object::create(&mut builder, &object_args);
+            builder.finish_minimal(object);
+        }
+
+        let o: Object = flatbuffers::get_root::<reflection::Object>(builder.finished_data()).into();
+        assert!(o.fields[0].offset < o.fields[1].offset);
+    }
+
+    #[test]
+    fn test_enum_vals_sorted() {
+        let mut builder = FlatBufferBuilder::new();
+        {
+            let val1_args = reflection::EnumValArgs {
+                name: Some(builder.create_string("field")),
+                value: 6,
+                ..Default::default()
+            };
+            let val2_args = reflection::EnumValArgs {
+                name: Some(builder.create_string("field")),
+                value: 4,
+                ..Default::default()
+            };
+            let val1 = reflection::EnumVal::create(&mut builder, &val1_args);
+            let val2 = reflection::EnumVal::create(&mut builder, &val2_args);
+            let vals = builder.create_vector(&[val1, val2]);
+            let enum_args = reflection::EnumArgs {
+                name: Some(builder.create_string("foo.bar")),
+                underlying_type: Some(reflection::Type::create(
+                    &mut builder,
+                    &reflection::TypeArgs {
+                        base_type: reflection::BaseType::UByte,
+                        ..Default::default()
+                    },
+                )),
+                values: Some(vals),
+                ..Default::default()
+            };
+            let e = reflection::Enum::create(&mut builder, &enum_args);
+            builder.finish_minimal(e);
+        }
+
+        let e: Enum = flatbuffers::get_root::<reflection::Enum>(builder.finished_data()).into();
+        assert!(e.values[0].value < e.values[1].value);
     }
 }
