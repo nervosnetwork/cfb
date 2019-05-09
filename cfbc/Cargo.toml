@@ -8,16 +8,21 @@ build = "build.rs"
 include = ["/templates"]
 
 [dependencies]
-clap = "2.33.0"
 cfb-schema = { path = "../cfb-schema" }
-phf = "0.7.21"
-includedir = "0.5.0"
+
+clap = "2.33.0"
 handlebars = "2.0.0-beta"
+includedir = "0.5.0"
+phf = "0.7.21"
 serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
+cfb-runtime = { path = "../cfb-runtime" }
+
+flatbuffers = "0.6.0"
+proptest = "0.9.1"
 tempfile = "3.0"
 
 [build-dependencies]
-includedir_codegen = "0.5.0"
 walkdir = "2.1.4"
+includedir_codegen = "0.5.0"
