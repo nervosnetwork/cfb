@@ -8,6 +8,7 @@ FLATC_RUST_FILES := $(patsubst schema/%.fbs,cfbc/tests/common/%_generated.rs,${F
 BUILDER_FILES := $(patsubst schema/%.fbs,cfbc/tests/common/%_builder.rs,${FBS_FILES})
 
 GEN_FILES := ${BFBS_FILES} ${JSON_FILES} ${FLATC_RUST_FILES} ${BUILDER_FILES}
+GEN_DEPENDENCIES := $(wildcard cfbc/src/helpers/*.rs) $(wildcard cfbc/templates/*.hbs)
 
 test:
 	cargo test ${VERBOSE} --all
@@ -43,7 +44,7 @@ cfbc/tests/common/%_generated.rs: schema/%.bfbs
 	$(FLATC) -r -o $(shell dirname $@) $<
 	rustfmt $@
 
-cfbc/tests/common/%_builder.rs: schema/%.bfbs
+cfbc/tests/common/%_builder.rs: schema/%.bfbs $(GEN_DEPENDENCIES)
 	cargo run -- -o $(shell dirname $@) $<
 	rustfmt $@
 

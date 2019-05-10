@@ -1,0 +1,5 @@
+enum Color:byte { Red = 0, Green, Blue = 2 }
+
+table Bag {
+  color: Color = Blue;
+}
