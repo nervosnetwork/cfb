@@ -50,11 +50,11 @@ pub fn write_field_default(field: &Field, schema: &Schema, out: &mut dyn Output)
                 .values
                 .iter()
                 .find(|v| v.value == field.default_integer)
-                .or_else(|| e.values.iter().next())
-                .expect("enum default value");
+                .map(|v| &v.name)
+                .unwrap_or(&e.default_val);
             out.write(&e.name)?;
             out.write("::")?;
-            out.write(&def.name)
+            out.write(def)
         }
         Type::Obj(index) => {
             if schema.objects[index].is_struct {

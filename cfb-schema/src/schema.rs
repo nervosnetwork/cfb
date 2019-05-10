@@ -74,6 +74,7 @@ pub struct Field {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Enum {
     pub name: String,
+    pub default_val: String,
     pub values: Vec<EnumVal>,
     pub is_union: bool,
     pub underlying_type: Type,
@@ -219,13 +220,21 @@ impl<'a> From<reflection::Object<'a>> for Object {
 
 impl<'a> From<reflection::Enum<'a>> for Enum {
     fn from(e: reflection::Enum<'a>) -> Enum {
+        let name = base_name(e.name()).to_string();
         let mut values: Vec<EnumVal> = vector_into_iter(e.values()).map(Into::into).collect();
         values.sort_by_key(|f| f.value);
+        let default_val = values
+            .iter()
+            .find(|v| v.value == 0)
+            .or_else(|| values.iter().next())
+            .map(|v| v.name.clone())
+            .unwrap_or_else(|| name.clone());
 
         Enum {
+            name,
             values,
+            default_val,
             underlying_type: e.underlying_type().into(),
-            name: base_name(e.name()).to_string(),
             is_union: e.is_union(),
             attributes: collect_attributes(e.attributes()),
         }

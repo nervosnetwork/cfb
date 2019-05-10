@@ -7,6 +7,12 @@ pub enum {{name}} {
     {{~/each}}
 }
 
+impl Default for {{name}} {
+    fn default() -> Self {
+        {{name}}::{{default_val}}
+    }
+}
+
 impl PushScalarInto for {{name}} {
     fn push_into(self, builder: &mut Builder) {
         (self as {{rust_type underlying_type}}).push_into(builder)

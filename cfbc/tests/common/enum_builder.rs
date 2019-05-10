@@ -57,6 +57,12 @@ pub enum Color {
     Blue = 2,
 }
 
+impl Default for Color {
+    fn default() -> Self {
+        Color::Red
+    }
+}
+
 impl PushScalarInto for Color {
     fn push_into(self, builder: &mut Builder) {
         (self as i8).push_into(builder)
