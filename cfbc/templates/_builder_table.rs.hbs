@@ -1,4 +1,4 @@
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct {{name}}Builder {
     {{~#each fields}}
     pub {{name}}: {{rust_type type}},
@@ -12,6 +12,16 @@ impl {{name}}Builder {
     const ALIGNMENT_{{screaming_snake_case name}}: usize = {{alignment}};
     {{~/each}}
     const ALIGNMENT: usize = {{alignment}};
+}
+
+impl Default for {{name}}Builder {
+    fn default() -> Self {
+        {{name}}Builder {
+            {{~#each fields}}
+            {{name}}: {{rust_field_default this}},
+            {{~/each}}
+        }
+    }
 }
 
 impl PushReferenceInto for {{name}}Builder {

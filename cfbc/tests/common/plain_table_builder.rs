@@ -3,7 +3,7 @@
 use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET};
 use cfb_runtime::{Builder, PushReferenceInto};
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct AccountBuilder {
     pub year: u32,
     pub balance: u64,
@@ -17,6 +17,15 @@ impl AccountBuilder {
     const SIZE_BALANCE: usize = 8;
     const ALIGNMENT_BALANCE: usize = 8;
     const ALIGNMENT: usize = 8;
+}
+
+impl Default for AccountBuilder {
+    fn default() -> Self {
+        AccountBuilder {
+            year: 0,
+            balance: 0,
+        }
+    }
 }
 
 impl PushReferenceInto for AccountBuilder {
