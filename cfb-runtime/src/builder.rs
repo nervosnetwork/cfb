@@ -55,6 +55,12 @@ impl Builder {
         scalar.push_into(self);
     }
 
+    pub fn push_direct<T>(&mut self, data: &T) {
+        self.push_bytes(unsafe {
+            ::std::slice::from_raw_parts(data as *const T as *const u8, ::std::mem::size_of::<T>())
+        })
+    }
+
     pub fn push_reference<T: PushReferenceInto>(&mut self, uoffset_pos: usize, reference: T) {
         let offset = reference.push_into(self);
         let uoffset = (offset - uoffset_pos) as UOffset;

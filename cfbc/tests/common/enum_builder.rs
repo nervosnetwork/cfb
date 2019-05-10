@@ -36,7 +36,6 @@ impl PushReferenceInto for BagBuilder {
         };
 
         builder.align_after(SIZE_OF_SOFFSET, BagBuilder::ALIGNMENT);
-
         let table_start = builder.len();
         builder.push_scalar((table_start - vtable_start) as SOffset);
 

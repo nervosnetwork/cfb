@@ -56,6 +56,13 @@ pub fn write_field_default(field: &Field, schema: &Schema, out: &mut dyn Output)
             out.write("::")?;
             out.write(&def.name)
         }
+        Type::Obj(index) => {
+            if schema.objects[index].is_struct {
+                out.write("Default::default()")
+            } else {
+                out.write("None")
+            }
+        }
         _ => out.write("None"),
     }
     .map_err(Into::into)

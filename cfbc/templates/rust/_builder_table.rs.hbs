@@ -41,10 +41,8 @@ impl{{lifetime_if has_reference}} PushReferenceInto for {{name}}Builder{{lifetim
         };
 
         builder.align_after(SIZE_OF_SOFFSET, {{name}}Builder::ALIGNMENT);
-
         let table_start = builder.len();
         builder.push_scalar((table_start - vtable_start) as SOffset);
-
         {{#each fields_by_alignment}}
         {{~#if is_reference}}
         let {{name}}_pos = if {{is_field_present this}} {
@@ -63,7 +61,7 @@ impl{{lifetime_if has_reference}} PushReferenceInto for {{name}}Builder{{lifetim
         {{~/if}}
         {{~/each}}
 
-        {{#each fields_by_alignment}}
+        {{~#each fields_by_alignment}}
         {{~#if is_reference}}
         if let Some({{name}}) = self.{{name}} {
             if {{name}}_pos > 0 {
