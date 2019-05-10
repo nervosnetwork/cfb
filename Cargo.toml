@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "cfb-core",
   "cfb-runtime",
   "cfb-schema",
   "cfbc",

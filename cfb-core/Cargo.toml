@@ -1,12 +1,11 @@
 [package]
-name = "cfb-runtime"
+name = "cfb-core"
 version = "0.1.0"
 authors = ["Nervos Core Dev <dev@nervos.org>"]
 edition = "2018"
 license = "MIT"
 
 [dependencies]
-cfb-core = { path = "../cfb-core" }
 
 [dev-dependencies]
 proptest = "0.9.1"

@@ -1,21 +1,21 @@
-#[repr(C, align(8))]
+#[repr(C, align({{ alignment }}))]
 #[derive(Default, Clone, Debug, PartialEq)]
-pub struct Vec3 {
-    pub x: u64,
-    pub y: u8,
-    pub padding0_: u8,
-    pub padding1_: u16,
-    pub padding2_: u32,
-    pub z: u64,
+pub struct {{name}} {
+    {{~#each padded_fields}}
+    pub {{name}}: {{rust_type type}},
+    {{~/each}}
 }
 
-impl Vec3 {
+impl {{name}} {
     pub fn is_present(&self) -> bool {
-        self.x != 0 || self.y != 0 || self.z != 0
+        {{#each fields~}}
+            {{~#unless @first}} || {{/unless~}}
+            {{~is_field_present this~}}
+        {{~/each}}
     }
 }
 
-impl PushScalarInto for Vec3 {
+impl PushScalarInto for {{name}} {
     #[cfg(target_endian = "little")]
     fn push_into(self, builder: &mut Builder) {
         builder.push_direct(&self)
@@ -23,11 +23,8 @@ impl PushScalarInto for Vec3 {
 
     #[cfg(not(target_endian = "little"))]
     fn push_into(self, builder: &mut Builder) {
-        builder.push_scalar(self.x);
-        builder.push_scalar(self.y);
-        builder.push_scalar(self.padding0_);
-        builder.push_scalar(self.padding1_);
-        builder.push_scalar(self.padding2_);
-        builder.push_scalar(self.z);
+        {{~#each padded_fields}}
+        builder.push_scalar(self.{{name}});
+        {{~/each}}
     }
 }

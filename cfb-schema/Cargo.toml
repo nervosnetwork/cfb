@@ -6,5 +6,7 @@ edition = "2018"
 license = "MIT"
 
 [dependencies]
+cfb-core = { path = "../cfb-core" }
+
 flatbuffers = "0.6.0"
 serde = { version = "1.0", features = ["derive"] }
