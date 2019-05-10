@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET};
+use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET, SIZE_OF_UOFFSET};
 use cfb_runtime::{Builder, PushReferenceInto, PushScalarInto};
 
 #[derive(Debug)]
@@ -53,6 +53,7 @@ impl PushReferenceInto for AccountBuilder {
 
         let table_start = builder.len();
         builder.push_scalar((table_start - vtable_start) as SOffset);
+
         if self.balance != 0 {
             builder.align(AccountBuilder::ALIGNMENT_BALANCE);
             builder.push_scalar(self.balance);

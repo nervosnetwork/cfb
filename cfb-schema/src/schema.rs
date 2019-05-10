@@ -44,6 +44,7 @@ pub struct Object {
     pub attributes: HashMap<String, String>,
 
     pub alignment: usize,
+    pub has_reference: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -61,6 +62,7 @@ pub struct Field {
 
     pub size: usize,
     pub alignment: usize,
+    pub is_reference: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -161,6 +163,11 @@ impl<'a> From<reflection::Schema<'a>> for Schema {
             for f in &mut o.fields {
                 f.size = schema.type_size(&f.r#type);
                 f.alignment = schema.type_alignment(&f.r#type);
+                f.is_reference = match f.r#type {
+                    Type::String | Type::Vector(_) | Type::Union(_) => true,
+                    Type::Obj(index) => !schema.objects[index].is_struct,
+                    _ => false,
+                }
             }
             o.fields_by_alignment = o.fields.clone();
             o.fields_by_alignment
@@ -171,6 +178,7 @@ impl<'a> From<reflection::Schema<'a>> for Schema {
                 .map(|f| f.alignment)
                 .max()
                 .unwrap_or(SIZE_OF_UOFFSET);
+            o.has_reference = o.fields.iter().any(|f| f.is_reference);
         }
         schema.objects = objects;
 
@@ -194,6 +202,7 @@ impl<'a> From<reflection::Object<'a>> for Object {
             // wait for Schema to fill them
             fields_by_alignment: Vec::new(),
             alignment: 0,
+            has_reference: false,
         }
     }
 }
@@ -240,6 +249,7 @@ impl<'a> From<reflection::Field<'a>> for Field {
             // Wait for Schema to fill them
             alignment: 0,
             size: 0,
+            is_reference: false,
         }
     }
 }
