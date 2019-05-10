@@ -7,11 +7,7 @@ use flatbuffers::get_root;
 use proptest::prelude::*;
 
 fn _test_plain_table_builder(year: u32, balance: u64) {
-    let buf = Builder::new().build(
-        cfb_builder::AccountBuilder::new()
-            .year(year)
-            .balance(balance),
-    );
+    let buf = Builder::new().build(cfb_builder::AccountBuilder { year, balance });
 
     let root = get_root::<flatc::Account>(&buf[..]);
     assert_eq!(year, root.year());

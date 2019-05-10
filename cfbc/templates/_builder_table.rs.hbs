@@ -1,7 +1,7 @@
 #[derive(Default, Debug)]
 pub struct {{name}}Builder {
     {{~#each fields}}
-    {{name}}: {{rust_type type}},
+    pub {{name}}: {{rust_type type}},
     {{~/each}}
 }
 
@@ -12,20 +12,9 @@ impl {{name}}Builder {
     const ALIGNMENT_{{screaming_snake_case name}}: usize = {{alignment}};
     {{~/each}}
     const ALIGNMENT: usize = {{alignment}};
-
-    pub fn new() -> Self {
-        {{name}}Builder::default()
-    }
-    {{~#each fields}}
-
-    pub fn {{name}}(&mut self, {{name}}: {{rust_type type}}) -> &mut Self {
-        self.{{name}} = {{name}};
-        self
-    }
-    {{~/each}}
 }
 
-impl<'a> PushReferenceInto for &'a mut {{name}}Builder {
+impl PushReferenceInto for {{name}}Builder {
     fn push_into(self, builder: &mut Builder) -> usize {
         let vtable_start = {
             let mut vtable = builder.start_vtable();

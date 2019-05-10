@@ -6,8 +6,8 @@ pub mod example {
 
     #[derive(Default, Debug)]
     pub struct AccountBuilder {
-        year: u32,
-        balance: u64,
+        pub year: u32,
+        pub balance: u64,
     }
 
     impl AccountBuilder {
@@ -18,23 +18,9 @@ pub mod example {
         const SIZE_BALANCE: usize = 8;
         const ALIGNMENT_BALANCE: usize = 8;
         const ALIGNMENT: usize = 8;
-
-        pub fn new() -> Self {
-            AccountBuilder::default()
-        }
-
-        pub fn year(&mut self, year: u32) -> &mut Self {
-            self.year = year;
-            self
-        }
-
-        pub fn balance(&mut self, balance: u64) -> &mut Self {
-            self.balance = balance;
-            self
-        }
     }
 
-    impl<'a> PushReferenceInto for &'a mut AccountBuilder {
+    impl PushReferenceInto for AccountBuilder {
         fn push_into(self, builder: &mut Builder) -> usize {
             let vtable_start = {
                 let mut vtable = builder.start_vtable();
