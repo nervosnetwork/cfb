@@ -3,17 +3,17 @@ pub mod {{this}} {
 {{~/each~}}
 #![allow(unused_imports)]
 
-use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET};
+use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET, SIZE_OF_UOFFSET};
 use cfb_runtime::{Builder, PushReferenceInto, PushScalarInto};
 
 {{~#each schema.objects}}
 
-{{>_builder_object.rs}}
+{{>_builder_object}}
 {{~/each}}
 
 {{~#each schema.enums}}
 
-{{>_builder_enum.rs}}
+{{>_builder_enum}}
 {{~/each}}
 
 {{~#each schema.namespaces}}}{{/each~}}

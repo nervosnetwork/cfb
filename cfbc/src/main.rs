@@ -1,10 +1,13 @@
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate handlebars;
 
 mod cli_options;
 mod exit_code;
 mod generator;
 mod helpers;
+mod lang;
 mod templates;
 
 use cfb_schema::Schema;
@@ -45,14 +48,14 @@ fn run_app() -> Result<(), ExitCode> {
 
     let schema_buffer = read_file_to_vec(&options.bfbs)?;
     let schema = Schema::from_bytes(&schema_buffer);
-    let g = Generator::new(schema);
 
     let stem = options
         .bfbs
         .file_stem()
         .ok_or_else(|| ExitCodeWithMessage::cli("<bfbs> is not a valid file name".to_string()))?;
 
-    g.generate_builder(open_output_file(build_output_file_name(
+    let gen = Generator::new(lang::Lang::Rust, schema);
+    gen.generate_builder(open_output_file(build_output_file_name(
         &options.output,
         stem,
         "_builder.rs",

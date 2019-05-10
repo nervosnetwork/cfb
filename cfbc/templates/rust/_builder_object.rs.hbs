@@ -1,11 +1,11 @@
 #[derive(Debug)]
-pub struct {{name}}Builder {
+pub struct {{name}}Builder{{lifetime_if has_reference}} {
     {{~#each fields}}
     pub {{name}}: {{rust_type type}},
     {{~/each}}
 }
 
-impl {{name}}Builder {
+impl{{lifetime_if has_reference}} {{name}}Builder{{lifetime_if has_reference}} {
     {{~#each fields}}
     const VT_{{screaming_snake_case name}}: usize = {{offset}};
     const SIZE_{{screaming_snake_case name}}: usize = {{size}};
@@ -14,22 +14,22 @@ impl {{name}}Builder {
     const ALIGNMENT: usize = {{alignment}};
 }
 
-impl Default for {{name}}Builder {
+impl{{lifetime_if has_reference}} Default for {{name}}Builder{{lifetime_if has_reference}} {
     fn default() -> Self {
         {{name}}Builder {
             {{~#each fields}}
-            {{name}}: {{rust_field_default this}},
+            {{name}}: {{field_default this}},
             {{~/each}}
         }
     }
 }
 
-impl PushReferenceInto for {{name}}Builder {
+impl{{lifetime_if has_reference}} PushReferenceInto for {{name}}Builder{{lifetime_if has_reference}} {
     fn push_into(self, builder: &mut Builder) -> usize {
         let vtable_start = {
             let mut vtable = builder.start_vtable();
             {{~#each fields_by_alignment}}
-            if {{rust_is_field_present this}} {
+            if {{is_field_present this}} {
                 vtable.add_field(
                     {{../name}}Builder::VT_{{screaming_snake_case name}},
                     {{../name}}Builder::SIZE_{{screaming_snake_case name}},
@@ -44,11 +44,33 @@ impl PushReferenceInto for {{name}}Builder {
 
         let table_start = builder.len();
         builder.push_scalar((table_start - vtable_start) as SOffset);
-        {{~#each fields_by_alignment}}
-        if {{rust_is_field_present this}} {
+
+        {{#each fields_by_alignment}}
+        {{~#if is_reference}}
+        let {{name}}_pos = if {{is_field_present this}} {
+            builder.align({{../name}}Builder::ALIGNMENT_{{screaming_snake_case name}});
+            let pos = builder.len();
+            builder.pad(SIZE_OF_UOFFSET);
+            pos
+        } else {
+            0
+        };
+        {{~else}}
+        if {{is_field_present this}} {
             builder.align({{../name}}Builder::ALIGNMENT_{{screaming_snake_case name}});
             builder.push_scalar(self.{{name}});
         }
+        {{~/if}}
+        {{~/each}}
+
+        {{#each fields_by_alignment}}
+        {{~#if is_reference}}
+        if let Some({{name}}) = self.{{name}} {
+            if {{name}}_pos > 0 {
+                builder.push_reference({{name}}_pos, {{name}});
+            }
+        }
+        {{~/if}}
         {{~/each}}
 
         table_start

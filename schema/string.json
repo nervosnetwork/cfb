@@ -1,0 +1,25 @@
+{
+  "objects": [
+    {
+      "name": "Author",
+      "fields": [
+        {
+          "name": "name",
+          "type": {
+            "base_type": "String"
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

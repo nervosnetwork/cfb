@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
 
-use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET};
+use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET, SIZE_OF_UOFFSET};
 use cfb_runtime::{Builder, PushReferenceInto, PushScalarInto};
 
 #[derive(Debug)]
@@ -39,6 +39,7 @@ impl PushReferenceInto for BagBuilder {
 
         let table_start = builder.len();
         builder.push_scalar((table_start - vtable_start) as SOffset);
+
         if self.color != Color::Blue {
             builder.align(BagBuilder::ALIGNMENT_COLOR);
             builder.push_scalar(self.color);

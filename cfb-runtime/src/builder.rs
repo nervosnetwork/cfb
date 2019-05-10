@@ -1,5 +1,7 @@
 use crate::alignment::{align, align_after};
-use crate::types::{SOffset, UOffset, VOffset, SIZE_OF_SOFFSET, SIZE_OF_UOFFSET, SIZE_OF_VOFFSET};
+use crate::types::{
+    Len, SOffset, UOffset, VOffset, SIZE_OF_LEN, SIZE_OF_SOFFSET, SIZE_OF_UOFFSET, SIZE_OF_VOFFSET,
+};
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hasher};
 
@@ -232,6 +234,19 @@ impl PushScalarInto for f64 {
     }
 }
 
+impl<'a> PushReferenceInto for &'a str {
+    fn push_into(self, builder: &mut Builder) -> usize {
+        builder.align(SIZE_OF_LEN);
+        let pos = builder.len();
+
+        builder.push_scalar(self.len() as Len);
+        builder.push_bytes(self.as_bytes());
+        builder.push_byte(0u8);
+
+        pos
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -326,5 +341,24 @@ mod test {
             .concat();
             assert_eq!(expect, &builder.as_bytes()[..10]);
         }
+    }
+
+    #[test]
+    fn test_string_reference() {
+        let s = "String";
+        let buf = Builder::new().build(s);
+
+        let expect = [
+            // root uoffset
+            &4u32.to_le_bytes()[..],
+            // len
+            &((s.len() as u32).to_le_bytes()),
+            // content
+            s.as_bytes(),
+            // null-terminated
+            &[0u8],
+        ]
+        .concat();
+        assert_eq!(expect, buf);
     }
 }
