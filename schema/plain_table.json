@@ -1,7 +1,7 @@
 {
   "objects": [
     {
-      "name": "example.Account",
+      "name": "Account",
       "fields": [
         {
           "name": "balance",

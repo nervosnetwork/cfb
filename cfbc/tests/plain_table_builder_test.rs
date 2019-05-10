@@ -1,8 +1,8 @@
 pub mod common;
 
 use cfb_runtime::builder::Builder;
-use common::plain_table_builder::example as cfb_builder;
-use common::plain_table_generated::example as flatc;
+use common::plain_table_builder as cfb_builder;
+use common::plain_table_generated as flatc;
 use flatbuffers::get_root;
 use proptest::prelude::*;
 
