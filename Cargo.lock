@@ -103,9 +103,17 @@ version = "1.0.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "cfb-core"
+version = "0.1.0"
+dependencies = [
+ "proptest 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "cfb-runtime"
 version = "0.1.0"
 dependencies = [
+ "cfb-core 0.1.0",
  "proptest 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -113,6 +121,7 @@ dependencies = [
 name = "cfb-schema"
 version = "0.1.0"
 dependencies = [
+ "cfb-core 0.1.0",
  "flatbuffers 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.91 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

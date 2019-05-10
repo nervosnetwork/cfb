@@ -36,7 +36,6 @@ impl<'a> PushReferenceInto for AuthorBuilder<'a> {
         };
 
         builder.align_after(SIZE_OF_SOFFSET, AuthorBuilder::ALIGNMENT);
-
         let table_start = builder.len();
         builder.push_scalar((table_start - vtable_start) as SOffset);
 
@@ -48,7 +47,6 @@ impl<'a> PushReferenceInto for AuthorBuilder<'a> {
         } else {
             0
         };
-
         if let Some(name) = self.name {
             if name_pos > 0 {
                 builder.push_reference(name_pos, name);

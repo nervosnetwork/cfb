@@ -1,0 +1,30 @@
+#[repr(C, align({{ alignment }}))]
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct {{name}} {
+    {{~#each padded_fields}}
+    pub {{name}}: {{rust_type type}},
+    {{~/each}}
+}
+
+impl {{name}} {
+    pub fn is_present(&self) -> bool {
+        {{#each fields~}}
+            {{~#unless @first}} || {{/unless~}}
+            {{~is_field_present this~}}
+        {{~/each}}
+    }
+}
+
+impl PushScalarInto for {{name}} {
+    #[cfg(target_endian = "little")]
+    fn push_into(self, builder: &mut Builder) {
+        builder.push_direct(&self)
+    }
+
+    #[cfg(not(target_endian = "little"))]
+    fn push_into(self, builder: &mut Builder) {
+        {{~#each padded_fields}}
+        builder.push_scalar(self.{{name}});
+        {{~/each}}
+    }
+}

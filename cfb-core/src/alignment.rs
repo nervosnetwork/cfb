@@ -5,7 +5,7 @@
 /// ## Examples
 ///
 /// ```
-/// use cfb_runtime::alignment::align;
+/// use cfb_core::alignment::align;
 /// # let current_position = 0;
 /// # let alignment = 16;
 /// let result = align(current_position, alignment);
@@ -32,7 +32,7 @@ pub fn align(current_position: usize, alignment: usize) -> usize {
 /// ## Examples
 ///
 /// ```
-/// use cfb_runtime::alignment::align_after;
+/// use cfb_core::alignment::align_after;
 /// # let current_position = 0;
 /// # let len = 8;
 /// # let alignment = 16;

@@ -1,0 +1,56 @@
+{
+  "objects": [
+    {
+      "name": "Point",
+      "fields": [
+        {
+          "name": "position",
+          "type": {
+            "base_type": "Obj",
+            "index": 1
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    },
+    {
+      "name": "Vec3",
+      "fields": [
+        {
+          "name": "x",
+          "type": {
+            "base_type": "ULong"
+          }
+        },
+        {
+          "name": "y",
+          "type": {
+            "base_type": "UByte"
+          },
+          "id": 1,
+          "offset": 8
+        },
+        {
+          "name": "z",
+          "type": {
+            "base_type": "ULong"
+          },
+          "id": 2,
+          "offset": 16
+        }
+      ],
+      "is_struct": true,
+      "minalign": 8,
+      "bytesize": 24
+    }
+  ],
+  "enums": [
+
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

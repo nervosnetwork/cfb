@@ -50,7 +50,6 @@ impl PushReferenceInto for AccountBuilder {
         };
 
         builder.align_after(SIZE_OF_SOFFSET, AccountBuilder::ALIGNMENT);
-
         let table_start = builder.len();
         builder.push_scalar((table_start - vtable_start) as SOffset);
 

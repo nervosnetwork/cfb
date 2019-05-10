@@ -36,7 +36,6 @@ impl PushReferenceInto for BagBuilder {
         };
 
         builder.align_after(SIZE_OF_SOFFSET, BagBuilder::ALIGNMENT);
-
         let table_start = builder.len();
         builder.push_scalar((table_start - vtable_start) as SOffset);
 
@@ -56,6 +55,12 @@ pub enum Color {
     Red = 0,
     Green = 1,
     Blue = 2,
+}
+
+impl Default for Color {
+    fn default() -> Self {
+        Color::Red
+    }
 }
 
 impl PushScalarInto for Color {

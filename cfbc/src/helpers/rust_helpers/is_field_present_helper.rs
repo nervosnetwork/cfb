@@ -53,6 +53,15 @@ impl HelperDef for IsFieldPresentHelper {
                 out.write(&field.name)?;
                 out.write(".map(str::is_empty) == Some(false)")
             }
+            Type::Obj(index) => {
+                out.write("self.")?;
+                out.write(&field.name)?;
+                if self.0.objects[index].is_struct {
+                    out.write(".is_present()")
+                } else {
+                    out.write(".is_some()")
+                }
+            }
             _ => {
                 out.write("self.")?;
                 out.write(&field.name)?;

@@ -1,0 +1,97 @@
+{
+  "objects": [
+    {
+      "name": "Inner",
+      "fields": [
+        {
+          "name": "x",
+          "type": {
+            "base_type": "ULong"
+          }
+        }
+      ],
+      "is_struct": true,
+      "minalign": 8,
+      "bytesize": 8
+    },
+    {
+      "name": "Outter",
+      "fields": [
+        {
+          "name": "x",
+          "type": {
+            "base_type": "Obj",
+            "index": 0
+          }
+        },
+        {
+          "name": "y",
+          "type": {
+            "base_type": "Byte",
+            "index": 0
+          },
+          "id": 1,
+          "offset": 8
+        },
+        {
+          "name": "z",
+          "type": {
+            "base_type": "ULong"
+          },
+          "id": 2,
+          "offset": 16
+        }
+      ],
+      "is_struct": true,
+      "minalign": 8,
+      "bytesize": 24
+    },
+    {
+      "name": "Wrapper",
+      "fields": [
+        {
+          "name": "outter",
+          "type": {
+            "base_type": "Obj",
+            "index": 1
+          },
+          "offset": 4
+        }
+      ],
+      "minalign": 1
+    }
+  ],
+  "enums": [
+    {
+      "name": "Color",
+      "values": [
+        {
+          "name": "Red",
+          "union_type": {
+          }
+        },
+        {
+          "name": "Green",
+          "value": 1,
+          "union_type": {
+          }
+        },
+        {
+          "name": "Blue",
+          "value": 2,
+          "union_type": {
+          }
+        }
+      ],
+      "underlying_type": {
+        "base_type": "Byte",
+        "index": 0
+      }
+    }
+  ],
+  "file_ident": "",
+  "file_ext": "",
+  "services": [
+
+  ]
+}

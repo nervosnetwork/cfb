@@ -1,8 +1,7 @@
 use crate::reflection_generated::reflection;
+use cfb_core::types::SIZE_OF_UOFFSET;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-const SIZE_OF_UOFFSET: usize = 4;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Debug)]
 pub enum Type {
@@ -26,6 +25,12 @@ pub enum Type {
     Union(usize),
 }
 
+impl Default for Type {
+    fn default() -> Self {
+        Type::UByte
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Schema {
     pub namespaces: Vec<String>,
@@ -37,6 +42,7 @@ pub struct Schema {
 pub struct Object {
     pub name: String,
     pub fields: Vec<Field>,
+    pub padded_fields: Vec<Field>,
     pub fields_by_alignment: Vec<Field>,
     pub is_struct: bool,
     pub minalign: i32,
@@ -47,7 +53,7 @@ pub struct Object {
     pub has_reference: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
 pub struct Field {
     pub name: String,
     pub r#type: Type,
@@ -68,6 +74,7 @@ pub struct Field {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Enum {
     pub name: String,
+    pub default_val: String,
     pub values: Vec<EnumVal>,
     pub is_union: bool,
     pub underlying_type: Type,
@@ -172,6 +179,9 @@ impl<'a> From<reflection::Schema<'a>> for Schema {
             o.fields_by_alignment = o.fields.clone();
             o.fields_by_alignment
                 .sort_by(|a, b| (b.alignment, b.size).cmp(&(a.alignment, a.size)));
+            if o.is_struct {
+                pad_fields(o);
+            }
             o.alignment = o
                 .fields
                 .iter()
@@ -201,6 +211,7 @@ impl<'a> From<reflection::Object<'a>> for Object {
 
             // wait for Schema to fill them
             fields_by_alignment: Vec::new(),
+            padded_fields: Vec::new(),
             alignment: 0,
             has_reference: false,
         }
@@ -209,13 +220,21 @@ impl<'a> From<reflection::Object<'a>> for Object {
 
 impl<'a> From<reflection::Enum<'a>> for Enum {
     fn from(e: reflection::Enum<'a>) -> Enum {
+        let name = base_name(e.name()).to_string();
         let mut values: Vec<EnumVal> = vector_into_iter(e.values()).map(Into::into).collect();
         values.sort_by_key(|f| f.value);
+        let default_val = values
+            .iter()
+            .find(|v| v.value == 0)
+            .or_else(|| values.iter().next())
+            .map(|v| v.name.clone())
+            .unwrap_or_else(|| name.clone());
 
         Enum {
+            name,
             values,
+            default_val,
             underlying_type: e.underlying_type().into(),
-            name: base_name(e.name()).to_string(),
             is_union: e.is_union(),
             attributes: collect_attributes(e.attributes()),
         }
@@ -339,6 +358,84 @@ fn collect_attributes<'a>(
 
 fn base_name(name: &str) -> &str {
     name.rsplitn(2, '.').take(1).next().unwrap()
+}
+
+fn fill_paddings(fields: &mut Vec<Field>, mut index: usize, mut from: usize, to: usize) -> usize {
+    if (to - from) % 2 == 1 {
+        fields.push(Field {
+            name: format!("padding{}_", index).to_string(),
+            r#type: Type::UByte,
+            id: index as u16,
+            offset: from as u16,
+            size: 1,
+            alignment: 1,
+            ..Default::default()
+        });
+        from += 1;
+        index += 1;
+    }
+
+    if (to - from) % 4 == 2 {
+        fields.push(Field {
+            name: format!("padding{}_", index).to_string(),
+            r#type: Type::UShort,
+            id: index as u16,
+            offset: from as u16,
+            size: 2,
+            alignment: 2,
+            ..Default::default()
+        });
+        from += 2;
+        index += 1;
+    }
+
+    if (to - from) % 8 == 4 {
+        fields.push(Field {
+            name: format!("padding{}_", index).to_string(),
+            r#type: Type::UInt,
+            id: index as u16,
+            offset: from as u16,
+            size: 4,
+            alignment: 4,
+            ..Default::default()
+        });
+        from += 4;
+        index += 1;
+    }
+
+    for _ in 0..((to - from) / 8) {
+        fields.push(Field {
+            name: format!("padding{}_", index).to_string(),
+            r#type: Type::ULong,
+            id: index as u16,
+            offset: from as u16,
+            size: 8,
+            alignment: 8,
+            ..Default::default()
+        });
+        from += 8;
+        index += 1;
+    }
+
+    index
+}
+
+fn pad_fields(o: &mut Object) {
+    let mut pos: usize = 0;
+    let mut padding_index: usize = 0;
+
+    for f in &o.fields {
+        padding_index = fill_paddings(&mut o.padded_fields, padding_index, pos, f.offset as usize);
+        o.padded_fields.push(f.clone());
+        pos = f.offset as usize + f.size as usize
+    }
+
+    fill_paddings(
+        &mut o.padded_fields,
+        padding_index,
+        pos,
+        o.bytesize as usize,
+    );
 }
 
 #[cfg(test)]

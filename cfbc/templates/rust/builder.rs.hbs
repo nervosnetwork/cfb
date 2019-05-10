@@ -7,8 +7,13 @@ use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET, SIZE_OF_UOFFSET};
 use cfb_runtime::{Builder, PushReferenceInto, PushScalarInto};
 
 {{~#each schema.objects}}
+{{#if is_struct}}
 
-{{>_builder_object}}
+{{>_builder_struct}}
+{{~else}}
+
+{{>_builder_table}}
+{{~/if}}
 {{~/each}}
 
 {{~#each schema.enums}}

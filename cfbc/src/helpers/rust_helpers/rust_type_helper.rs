@@ -36,6 +36,7 @@ impl HelperDef for RustTypeHelper {
             Type::Double => out.write("f64"),
             Type::String => out.write("Option<&'a str>"),
             Type::Enum(index) => out.write(&self.0.enums[index].name),
+            Type::Obj(index) => out.write(&self.0.objects[index].name),
             _ => unreachable!(),
         }
         .map_err(Into::into)
