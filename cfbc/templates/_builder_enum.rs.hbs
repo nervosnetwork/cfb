@@ -1,0 +1,14 @@
+#[allow(non_camel_case_types)]
+#[repr({{rust_type underlying_type}})]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum {{name}} {
+    {{~#each values}}
+    {{name}} = {{value}},
+    {{~/each}}
+}
+
+impl PushScalarInto for {{name}} {
+    fn push_into(self, builder: &mut Builder) {
+        (self as {{rust_type underlying_type}}).push_into(builder)
+    }
+}

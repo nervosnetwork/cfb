@@ -19,10 +19,9 @@ impl Generator {
     pub fn new(schema: Schema) -> Self {
         let mut handlebars = Handlebars::new();
         register_templates(&mut handlebars);
-        register_helpers(&mut handlebars, schema.clone());
+        register_helpers(&mut handlebars);
 
         let context = Context { schema };
-        // println!("{}", handlebars::to_json(&context).to_string());
 
         Generator {
             context,

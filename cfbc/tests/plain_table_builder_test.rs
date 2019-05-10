@@ -1,6 +1,6 @@
 pub mod common;
 
-use cfb_runtime::builder::Builder;
+use cfb_runtime::Builder;
 use common::plain_table_builder as cfb_builder;
 use common::plain_table_generated as flatc;
 use flatbuffers::get_root;

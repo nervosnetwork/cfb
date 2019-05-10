@@ -1,7 +1,7 @@
 #![allow(unused_imports)]
 
 use cfb_runtime::types::{SOffset, SIZE_OF_SOFFSET};
-use cfb_runtime::{Builder, PushReferenceInto};
+use cfb_runtime::{Builder, PushReferenceInto, PushScalarInto};
 
 #[derive(Debug)]
 pub struct AccountBuilder {
