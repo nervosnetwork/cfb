@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-/// Unsigned offset used for refernce to table, vector and string.
+/// Unsigned offset used for reference to table, vector and string.
 pub type UOffset = u32;
 /// Signed offset used for vtable.
 pub type SOffset = i32;
