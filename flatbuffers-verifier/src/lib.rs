@@ -1,4 +1,4 @@
-use flatbuffers::{read_scalar, Follow, UOffsetT, SIZE_UOFFSET, SIZE_SIZEPREFIX};
+use flatbuffers::{read_scalar, Follow, UOffsetT, SIZE_SIZEPREFIX, SIZE_UOFFSET};
 use std::error;
 use std::fmt;
 use std::result;
