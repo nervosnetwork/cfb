@@ -1,4 +1,4 @@
-use flatbuffers::{read_scalar, Follow, UOffsetT, SIZE_UOFFSET};
+use flatbuffers::{read_scalar, Follow, UOffsetT, SIZE_SIZEPREFIX, SIZE_UOFFSET};
 use std::error;
 use std::fmt;
 use std::result;
@@ -146,6 +146,20 @@ where
     }
 
     let root = flatbuffers::get_root::<T>(data);
+    root.verify()?;
+    Ok(root)
+}
+
+pub fn get_size_prefixed_root<'a, T>(data: &'a [u8]) -> result::Result<T::Inner, Error>
+where
+    T: Follow<'a> + 'a,
+    T::Inner: Verify,
+{
+    if data.len() < SIZE_SIZEPREFIX + SIZE_UOFFSET {
+        return Err(Error::OutOfBounds);
+    }
+
+    let root = flatbuffers::get_size_prefixed_root::<T>(data);
     root.verify()?;
     Ok(root)
 }
