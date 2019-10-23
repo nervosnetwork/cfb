@@ -4,6 +4,8 @@
 
 CFB (Canonical FlatBuffers) is a restricted variant of FlatBuffers for producing unequivocal transfer syntax.
 
+CKB no longer uses CFB, see [nervosnetwork/rfcs#136](https://github.com/nervosnetwork/rfcs/pull/136).
+
 ## Usage
 
 Install the code geneartor as commane line utility:
