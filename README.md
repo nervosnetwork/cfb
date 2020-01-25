@@ -6,6 +6,8 @@ CFB (Canonical FlatBuffers) is a restricted variant of FlatBuffers for producing
 
 CKB no longer uses CFB, see [nervosnetwork/rfcs#136](https://github.com/nervosnetwork/rfcs/pull/136).
 
+And CFB has not reached the defined scope since we decided to move on. However, the generated verifier is still useful since the current Rust Flatbuffer generator just panics on invalid input.
+
 ## Usage
 
 Install the code geneartor as commane line utility:
